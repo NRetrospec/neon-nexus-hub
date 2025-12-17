@@ -180,19 +180,19 @@ const Home = () => {
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{ type: "spring", stiffness: 200, damping: 15 }}
-                className="inline-flex items-center gap-2 mb-4 px-4 py-2 rounded-full bg-gradient-to-r from-primary/20 to-accent/20 border border-primary/30"
+                className="inline-flex items-center gap-2 mb-4 px-3 sm:px-4 py-2 rounded-full bg-gradient-to-r from-primary/20 to-accent/20 border border-primary/30"
               >
-                <Flame className="h-5 w-5 text-primary animate-pulse" />
-                <span className="text-sm font-gaming text-primary">WELCOME BACK</span>
+                <Flame className="h-4 w-4 sm:h-5 sm:w-5 text-primary animate-pulse" />
+                <span className="text-xs sm:text-sm font-gaming text-primary">WELCOME BACK</span>
               </motion.div>
-              <h1 className="text-4xl md:text-6xl font-gaming font-bold mb-4">
+              <h1 className="text-3xl sm:text-4xl md:text-6xl font-gaming font-bold mb-4 px-4">
                 <span className="text-foreground">Hey, </span>
                 <span className="text-gradient">
                   {user?.firstName || user?.username || "Player"}
                 </span>
                 <span className="text-foreground">!</span>
               </h1>
-              <p className="text-muted-foreground font-cyber text-lg">
+              <p className="text-muted-foreground font-cyber text-base sm:text-lg px-4">
                 Ready to dominate today's challenges?
               </p>
             </motion.div>
@@ -200,27 +200,27 @@ const Home = () => {
             {/* Stats Grid */}
             <motion.div
               variants={itemVariants}
-              className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6"
+              className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 md:gap-6"
             >
               {stats.map((stat, index) => (
                 <motion.div
                   key={stat.label}
                   variants={itemVariants}
                   whileHover={{ scale: 1.05 }}
-                  className="gaming-card p-6 text-center"
+                  className="gaming-card p-4 sm:p-6 text-center"
                 >
                   <motion.div
                     variants={pulseVariants}
                     initial="initial"
                     animate="animate"
-                    className={`w-16 h-16 mx-auto mb-4 rounded-xl bg-gradient-to-br ${stat.bgColor} border border-border flex items-center justify-center`}
+                    className={`w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-3 sm:mb-4 rounded-xl bg-gradient-to-br ${stat.bgColor} border border-border flex items-center justify-center`}
                   >
-                    <stat.icon className={`h-8 w-8 ${stat.color}`} />
+                    <stat.icon className={`h-6 w-6 sm:h-8 sm:w-8 ${stat.color}`} />
                   </motion.div>
-                  <div className={`text-3xl font-gaming font-bold ${stat.color} mb-1`}>
+                  <div className={`text-xl sm:text-2xl md:text-3xl font-gaming font-bold ${stat.color} mb-1`}>
                     {stat.value}
                   </div>
-                  <div className="text-sm text-muted-foreground font-cyber">
+                  <div className="text-xs sm:text-sm text-muted-foreground font-cyber">
                     {stat.label}
                   </div>
                 </motion.div>
@@ -386,7 +386,9 @@ const Home = () => {
         </div>
       </main>
 
-      <Footer />
+      <div className="hidden lg:block">
+        <Footer />
+      </div>
     </div>
   );
 };

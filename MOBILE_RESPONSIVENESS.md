@@ -189,6 +189,109 @@ Tested responsive classes work on:
 - **Optimized re-renders**: Component state managed efficiently
 - **CSS transforms**: Hardware-accelerated animations
 
+## Recent Additions (2025)
+
+### 6. Landing Components ✅
+
+#### HeroSection
+- **Left side stats**: `hidden sm:block` - hides on very small screens
+- **Positioning**: `left-2 sm:left-8 md:left-16 lg:left-32` (progressive scaling)
+- **Circle sizes**: `w-20 h-20 sm:w-28 sm:h-28 md:w-36 md:h-36`
+- **Title**: `text-4xl sm:text-5xl md:text-7xl lg:text-8xl`
+- **Subtitle**: `text-base sm:text-lg md:text-xl` with `px-4`
+- **Badge**: `text-xs sm:text-sm` with `px-3 sm:px-4`
+
+#### FeaturesSection
+- **Section title**: `text-xs sm:text-sm` for overline
+- **Main heading**: `text-3xl sm:text-4xl md:text-5xl` with `px-4`
+- **Grid**: `grid-cols-1 sm:grid-cols-2 lg:grid-cols-4`
+- **Card titles**: `text-base sm:text-lg`
+- **Card descriptions**: `text-xs sm:text-sm`
+- **Gaps**: `gap-4 sm:gap-6`
+
+#### LeaderboardSection
+- **Headers**: Consistent small text sizing (`text-xs sm:text-sm`)
+- **Player names**: `text-sm sm:text-base truncate`
+- **XP values**: `text-sm sm:text-base`
+- **Trends**: `text-[10px] sm:text-xs`
+
+#### QuestsSection
+- **Grid gap**: `gap-8 lg:gap-12` for two-column layout
+- **Stats grid**: `gap-2 sm:gap-4`
+- **Stat values**: `text-lg sm:text-2xl`
+- **Stat labels**: `text-[10px] sm:text-xs`
+- **Quest cards**: `p-4 sm:p-5`
+- **Quest thumbnails**: `w-12 h-12 sm:w-16 sm:h-16`
+- **Quest titles**: `text-sm sm:text-base`
+
+#### Footer
+- **Grid**: `grid-cols-1 sm:grid-cols-2 lg:grid-cols-6`
+- **Brand column**: `col-span-1 sm:col-span-2`
+- **Logo text**: `text-lg sm:text-xl`
+- **Description**: `text-xs sm:text-sm`
+- **Social icons**: `w-9 h-9 sm:w-10 sm:w-10`
+- **Link headings**: `text-xs sm:text-sm`
+- **Links**: `text-xs sm:text-sm`
+- **Mobile visibility**: Hidden on mobile for authenticated pages (`hidden lg:block`)
+
+### 7. Authenticated Pages ✅
+
+#### Home Page (Dashboard)
+- **Welcome badge**: `text-xs sm:text-sm` with icon `h-4 w-4 sm:h-5 sm:w-5`
+- **Greeting title**: `text-3xl sm:text-4xl md:text-6xl` with `px-4`
+- **Subtitle**: `text-base sm:text-lg` with `px-4`
+- **Stats grid**: `gap-3 sm:gap-4 md:gap-6`
+- **Stat cards**: `p-4 sm:p-6`
+- **Stat icons**: `w-12 h-12 sm:w-16 sm:h-16` with icon `h-6 w-6 sm:h-8 sm:w-8`
+- **Stat values**: `text-xl sm:text-2xl md:text-3xl`
+- **Stat labels**: `text-xs sm:text-sm`
+
+#### Quests Page
+- **Page title**: `text-3xl sm:text-4xl md:text-5xl`
+- **Description**: `text-sm sm:text-base md:text-lg`
+- **Summary cards**: `gap-3 sm:gap-4` and `p-3 sm:p-4`
+- **Summary values**: `text-lg sm:text-2xl`
+- **Summary labels**: `text-[10px] sm:text-xs`
+
+#### Leaderboard Page
+- **Badge**: Icon `h-4 w-4 sm:h-5 sm:w-5` and text `text-xs sm:text-sm`
+- **Page title**: `text-3xl sm:text-4xl md:text-5xl` with `px-4`
+- **Description**: `text-sm sm:text-base md:text-lg` with `px-4`
+- **Podium grid**: `gap-2 sm:gap-4`
+- **2nd/3rd place**:
+  - Padding: `p-3 sm:p-6`
+  - Avatar: `w-14 h-14 sm:w-20 sm:h-20`
+  - Medal: `h-6 w-6 sm:h-8 sm:w-8`
+  - Username: `text-xs sm:text-base`
+  - Rank: `text-[10px] sm:text-sm`
+  - XP: `text-sm sm:text-xl`
+- **1st place (champion)**:
+  - Padding: `p-4 sm:p-8`
+  - Avatar: `w-16 h-16 sm:w-24 sm:h-24`
+  - Crown: `h-7 w-7 sm:h-10 sm:w-10`
+  - Username: `text-sm sm:text-lg`
+  - Label: `text-xs sm:text-sm`
+  - XP: `text-lg sm:text-2xl`
+
+#### Prizes Page
+- **Badge icon**: `h-4 w-4 sm:h-5 sm:w-5`
+- **Badge text**: `text-xs sm:text-sm`
+- **Page title**: `text-3xl sm:text-4xl md:text-6xl` with `px-4`
+- **Description**: `text-sm sm:text-base md:text-lg` with `px-4`
+
+### 8. Profile Components ✅
+
+#### ProfileContent
+- **Header layout**: `flex-col sm:flex-row` with `gap-4`
+- **Avatar**: `w-16 h-16 sm:w-20 sm:h-20`
+- **Avatar text**: `text-2xl sm:text-3xl`
+- **Username**: `text-2xl sm:text-3xl`
+- **Stats grid**: `gap-2 sm:gap-4`
+- **Stat cards**: `p-3 sm:p-4`
+- **Stat icons**: `h-6 w-6 sm:h-8 sm:w-8`
+- **Stat values**: `text-lg sm:text-2xl`
+- **Stat labels**: `text-[10px] sm:text-xs`
+
 ## Future Enhancements
 
 - [ ] Swipe gestures for drawer

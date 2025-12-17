@@ -632,7 +632,9 @@ const Social = () => {
         />
       )}
 
-      <Footer />
+      <div className="hidden lg:block">
+        <Footer />
+      </div>
     </div>
   );
 };

@@ -41,8 +41,8 @@ const HeroSection = () => {
       </div>
 
       {/* Stats - Left Side */}
-      <div className="absolute left-16 md:left-32 top-1/2 -translate-y-1/2 z-20">
-        <div className="grid grid-cols-1 gap-6 opacity-0 animate-slide-up stagger-4">
+      <div className="absolute left-2 sm:left-8 md:left-16 lg:left-32 top-1/2 -translate-y-1/2 z-20 hidden sm:block">
+        <div className="grid grid-cols-1 gap-4 sm:gap-6 opacity-0 animate-slide-up stagger-4">
           {[
             {
               image: "/Q - 16-12-2025 19-14-22321564185.png",
@@ -65,7 +65,7 @@ const HeroSection = () => {
               className="relative group cursor-pointer"
             >
               {/* Circle Container */}
-              <div className="w-30 h-30 md:w-36 md:h-36 rounded-full overflow-hidden border-2 border-primary/30 shadow-lg shadow-primary/20 transition-all duration-500 group-hover:border-primary group-hover:shadow-primary/60 group-hover:shadow-2xl group-hover:scale-110">
+              <div className="w-20 h-20 sm:w-28 sm:h-28 md:w-36 md:h-36 rounded-full overflow-hidden border-2 border-primary/30 shadow-lg shadow-primary/20 transition-all duration-500 group-hover:border-primary group-hover:shadow-primary/60 group-hover:shadow-2xl group-hover:scale-110">
                 <img
                   src={item.image}
                   alt={item.name}
@@ -96,25 +96,25 @@ const HeroSection = () => {
       <div className="relative z-20 container mx-auto px-4 text-center">
         <div className="max-w-4xl mx-auto">
           {/* Badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-card/50 border border-primary/30 backdrop-blur-sm mb-8 opacity-0 animate-slide-up">
+          <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 rounded-full bg-card/50 border border-primary/30 backdrop-blur-sm mb-8 opacity-0 animate-slide-up">
             <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
             </span>
-            <span className="text-sm font-cyber text-muted-foreground">
+            <span className="text-xs sm:text-sm font-cyber text-muted-foreground">
               The Ultimate Gaming Social Platform
             </span>
           </div>
 
           {/* Main Title */}
-          <h1 className="text-5xl md:text-7xl lg:text-8xl font-gaming font-bold mb-6 opacity-0 animate-slide-up stagger-1">
+          <h1 className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-gaming font-bold mb-6 opacity-0 animate-slide-up stagger-1">
             <span className="text-foreground">LEVEL UP</span>
             <br />
             <span className="text-gradient neon-text">YOUR GAME</span>
           </h1>
 
           {/* Subtitle */}
-          <p className="text-lg md:text-xl text-muted-foreground font-cyber max-w-2xl mx-auto mb-10 opacity-0 animate-slide-up stagger-2">
+          <p className="text-base sm:text-lg md:text-xl text-muted-foreground font-cyber max-w-2xl mx-auto mb-10 opacity-0 animate-slide-up stagger-2 px-4">
             Connect with gamers worldwide. Complete quests. Earn rewards.
             Dominate the leaderboards. Your gaming journey starts here.
           </p>

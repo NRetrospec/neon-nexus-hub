@@ -45,14 +45,14 @@ const LeaderboardSection = () => {
       <div className="relative container mx-auto px-4 z-10">
         {/* Section Header */}
         <div className="text-center mb-12">
-          <h2 className="text-sm font-gaming uppercase tracking-[0.3em] text-primary mb-4">
+          <h2 className="text-xs sm:text-sm font-gaming uppercase tracking-[0.3em] text-primary mb-4">
             Leaderboard
           </h2>
-          <h3 className="text-4xl md:text-5xl font-gaming font-bold mb-6">
+          <h3 className="text-3xl sm:text-4xl md:text-5xl font-gaming font-bold mb-6 px-4">
             <span className="text-foreground">TOP </span>
             <span className="text-gradient">PLAYERS</span>
           </h3>
-          <p className="text-muted-foreground font-cyber text-lg max-w-2xl mx-auto">
+          <p className="text-muted-foreground font-cyber text-sm sm:text-base md:text-lg max-w-2xl mx-auto px-4">
             Rise through the ranks and claim your spot among the elite.
             Every point counts towards legendary status.
           </p>
@@ -105,22 +105,22 @@ const LeaderboardSection = () => {
                   {/* Info */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <span className="font-gaming font-semibold text-foreground">
+                      <span className="font-gaming font-semibold text-foreground text-sm sm:text-base truncate">
                         {player.name}
                       </span>
-                      <span className="text-lg">{player.badge}</span>
+                      <span className="text-base sm:text-lg">{player.badge}</span>
                     </div>
-                    <div className="text-sm text-muted-foreground font-cyber">
+                    <div className="text-xs sm:text-sm text-muted-foreground font-cyber">
                       Level {Math.floor(player.xp / 1000)}
                     </div>
                   </div>
 
                   {/* XP */}
                   <div className="text-right">
-                    <div className="font-gaming font-bold text-primary">
+                    <div className="font-gaming font-bold text-primary text-sm sm:text-base">
                       {player.xp.toLocaleString()} XP
                     </div>
-                    <div className="text-xs text-neon-green font-cyber flex items-center justify-end gap-1">
+                    <div className="text-[10px] sm:text-xs text-neon-green font-cyber flex items-center justify-end gap-1">
                       <TrendingUp className="h-3 w-3" />
                       {player.trend}
                     </div>

@@ -45,33 +45,33 @@ const QuestsSection = () => {
       <div className="absolute top-1/2 right-1/4 w-96 h-96 bg-accent/20 rounded-full blur-[150px] -translate-y-1/2" />
 
       <div className="relative container mx-auto px-4 z-10">
-        <div className="grid lg:grid-cols-2 gap-12 items-center">
+        <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
           {/* Left Content */}
           <div>
-            <h2 className="text-sm font-gaming uppercase tracking-[0.3em] text-primary mb-4">
+            <h2 className="text-xs sm:text-sm font-gaming uppercase tracking-[0.3em] text-primary mb-4">
               Daily Quests
             </h2>
-            <h3 className="text-4xl md:text-5xl font-gaming font-bold mb-6">
+            <h3 className="text-3xl sm:text-4xl md:text-5xl font-gaming font-bold mb-6">
               <span className="text-foreground">COMPLETE QUESTS.</span>
               <br />
               <span className="text-gradient">EARN REWARDS.</span>
             </h3>
-            <p className="text-muted-foreground font-cyber text-lg mb-8">
-              Take on daily challenges, complete video-based quests, and earn points 
-              to unlock exclusive rewards in our prize store. Every quest brings you 
+            <p className="text-muted-foreground font-cyber text-sm sm:text-base md:text-lg mb-8">
+              Take on daily challenges, complete video-based quests, and earn points
+              to unlock exclusive rewards in our prize store. Every quest brings you
               closer to legendary status.
             </p>
 
             {/* Quest Stats */}
-            <div className="grid grid-cols-3 gap-4 mb-8">
+            <div className="grid grid-cols-3 gap-2 sm:gap-4 mb-8">
               {[
                 { value: "100+", label: "Active Quests" },
                 { value: "50K", label: "Points Available" },
                 { value: "24h", label: "New Quests" },
               ].map((stat, index) => (
-                <div key={index} className="text-center p-4 rounded-xl bg-card/50 border border-border">
-                  <div className="text-2xl font-gaming font-bold text-primary">{stat.value}</div>
-                  <div className="text-xs text-muted-foreground font-cyber">{stat.label}</div>
+                <div key={index} className="text-center p-3 sm:p-4 rounded-xl bg-card/50 border border-border">
+                  <div className="text-lg sm:text-2xl font-gaming font-bold text-primary">{stat.value}</div>
+                  <div className="text-[10px] sm:text-xs text-muted-foreground font-cyber">{stat.label}</div>
                 </div>
               ))}
             </div>
@@ -87,18 +87,18 @@ const QuestsSection = () => {
             {quests.map((quest, index) => (
               <div
                 key={quest.id}
-                className="gaming-card p-5 flex gap-4 items-center group"
+                className="gaming-card p-4 sm:p-5 flex gap-3 sm:gap-4 items-center group"
                 style={{ animationDelay: `${index * 0.15}s` }}
               >
                 {/* Thumbnail */}
-                <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-primary/20 to-accent/20 border border-primary/30 flex items-center justify-center text-3xl shrink-0 group-hover:scale-110 transition-transform">
+                <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-xl bg-gradient-to-br from-primary/20 to-accent/20 border border-primary/30 flex items-center justify-center text-2xl sm:text-3xl shrink-0 group-hover:scale-110 transition-transform">
                   {quest.thumbnail}
                 </div>
 
                 {/* Content */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
-                    <h4 className="font-gaming font-semibold text-foreground truncate">
+                    <h4 className="font-gaming font-semibold text-foreground truncate text-sm sm:text-base">
                       {quest.title}
                     </h4>
                     <span className={`

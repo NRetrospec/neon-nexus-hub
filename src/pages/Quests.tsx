@@ -177,30 +177,30 @@ const Quests = () => {
 
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
               <div>
-                <h1 className="text-4xl md:text-5xl font-gaming font-bold mb-2">
+                <h1 className="text-3xl sm:text-4xl md:text-5xl font-gaming font-bold mb-2">
                   <span className="text-foreground">QUEST </span>
                   <span className="text-gradient">BOARD</span>
                 </h1>
-                <p className="text-muted-foreground font-cyber text-lg">
+                <p className="text-muted-foreground font-cyber text-sm sm:text-base md:text-lg">
                   Complete challenges and earn epic rewards
                 </p>
               </div>
 
               {/* Stats Summary */}
-              <div className="flex gap-4">
-                <div className="gaming-card p-4 text-center">
-                  <div className="text-2xl font-gaming font-bold text-primary">
+              <div className="flex gap-3 sm:gap-4">
+                <div className="gaming-card p-3 sm:p-4 text-center">
+                  <div className="text-lg sm:text-2xl font-gaming font-bold text-primary">
                     {userQuests?.filter((uq) => uq.status === "completed").length || 0}
                   </div>
-                  <div className="text-xs text-muted-foreground font-cyber">
+                  <div className="text-[10px] sm:text-xs text-muted-foreground font-cyber">
                     Completed
                   </div>
                 </div>
-                <div className="gaming-card p-4 text-center">
-                  <div className="text-2xl font-gaming font-bold text-accent">
+                <div className="gaming-card p-3 sm:p-4 text-center">
+                  <div className="text-lg sm:text-2xl font-gaming font-bold text-accent">
                     {userQuests?.filter((uq) => uq.status === "in_progress").length || 0}
                   </div>
-                  <div className="text-xs text-muted-foreground font-cyber">
+                  <div className="text-[10px] sm:text-xs text-muted-foreground font-cyber">
                     In Progress
                   </div>
                 </div>
@@ -414,7 +414,9 @@ const Quests = () => {
         </div>
       </main>
 
-      <Footer />
+      <div className="hidden lg:block">
+        <Footer />
+      </div>
     </div>
   );
 };

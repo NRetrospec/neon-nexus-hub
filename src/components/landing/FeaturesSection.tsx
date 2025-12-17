@@ -69,21 +69,21 @@ const FeaturesSection = () => {
 
       <div className="relative container mx-auto px-4 z-10">
         {/* Section Header */}
-        <div className="text-center mb-16">
-          <h2 className="text-sm font-gaming uppercase tracking-[0.3em] text-primary mb-4">
+        <div className="text-center mb-12 sm:mb-16">
+          <h2 className="text-xs sm:text-sm font-gaming uppercase tracking-[0.3em] text-primary mb-4">
             Features
           </h2>
-          <h3 className="text-4xl md:text-5xl font-gaming font-bold mb-6">
+          <h3 className="text-3xl sm:text-4xl md:text-5xl font-gaming font-bold mb-6 px-4">
             <span className="text-foreground">POWER UP YOUR </span>
             <span className="text-gradient">EXPERIENCE</span>
           </h3>
-          <p className="text-muted-foreground font-cyber text-lg max-w-2xl mx-auto">
+          <p className="text-muted-foreground font-cyber text-sm sm:text-base md:text-lg max-w-2xl mx-auto px-4">
             Everything you need to connect, compete, and conquer in one ultimate gaming platform.
           </p>
         </div>
 
         {/* Features Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
           {features.map((feature, index) => (
             <div
               key={index}
@@ -103,10 +103,10 @@ const FeaturesSection = () => {
               </div>
 
               {/* Content */}
-              <h4 className="text-lg font-gaming font-semibold text-foreground mb-2 group-hover:text-primary transition-colors">
+              <h4 className="text-base sm:text-lg font-gaming font-semibold text-foreground mb-2 group-hover:text-primary transition-colors">
                 {feature.title}
               </h4>
-              <p className="text-sm text-muted-foreground font-cyber leading-relaxed">
+              <p className="text-xs sm:text-sm text-muted-foreground font-cyber leading-relaxed">
                 {feature.description}
               </p>
 

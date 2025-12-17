@@ -179,16 +179,16 @@ const Prizes = () => {
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ type: "spring", stiffness: 200, damping: 15 }}
-              className="inline-flex items-center gap-2 mb-4 px-4 py-2 rounded-full bg-gradient-to-r from-primary/20 to-accent/20 border border-primary/30"
+              className="inline-flex items-center gap-2 mb-4 px-3 sm:px-4 py-2 rounded-full bg-gradient-to-r from-primary/20 to-accent/20 border border-primary/30"
             >
-              <ShoppingCart className="h-5 w-5 text-primary animate-pulse" />
-              <span className="text-sm font-gaming text-primary">REWARDS STORE</span>
+              <ShoppingCart className="h-4 w-4 sm:h-5 sm:w-5 text-primary animate-pulse" />
+              <span className="text-xs sm:text-sm font-gaming text-primary">REWARDS STORE</span>
             </motion.div>
 
-            <h1 className="text-4xl md:text-6xl font-gaming font-bold mb-4">
+            <h1 className="text-3xl sm:text-4xl md:text-6xl font-gaming font-bold mb-4 px-4">
               <span className="text-gradient">Prize Shop</span>
             </h1>
-            <p className="text-muted-foreground font-cyber text-lg max-w-2xl mx-auto">
+            <p className="text-muted-foreground font-cyber text-sm sm:text-base md:text-lg max-w-2xl mx-auto px-4">
               Redeem your hard-earned points for exclusive rewards and gaming gear
             </p>
 
@@ -376,7 +376,9 @@ const Prizes = () => {
         </div>
       </main>
 
-      <Footer />
+      <div className="hidden lg:block">
+        <Footer />
+      </div>
 
       {/* Redemption Confirmation Dialog */}
       <Dialog open={!!selectedPrize} onOpenChange={() => setSelectedPrize(null)}>

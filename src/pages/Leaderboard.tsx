@@ -135,18 +135,18 @@ const Leaderboard = () => {
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{ type: "spring", stiffness: 200, damping: 15 }}
-                className="inline-flex items-center gap-2 mb-4 px-4 py-2 rounded-full bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border border-yellow-500/30"
+                className="inline-flex items-center gap-2 mb-4 px-3 sm:px-4 py-2 rounded-full bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border border-yellow-500/30"
               >
-                <Trophy className="h-5 w-5 text-yellow-400 animate-pulse" />
-                <span className="text-sm font-gaming text-yellow-400">
+                <Trophy className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-400 animate-pulse" />
+                <span className="text-xs sm:text-sm font-gaming text-yellow-400">
                   GLOBAL RANKINGS
                 </span>
               </motion.div>
-              <h1 className="text-4xl md:text-5xl font-gaming font-bold mb-4">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl font-gaming font-bold mb-4 px-4">
                 <span className="text-foreground">TOP </span>
                 <span className="text-gradient">PLAYERS</span>
               </h1>
-              <p className="text-muted-foreground font-cyber text-lg">
+              <p className="text-muted-foreground font-cyber text-sm sm:text-base md:text-lg px-4">
                 Compete with the best gamers worldwide
               </p>
             </div>
@@ -160,26 +160,26 @@ const Leaderboard = () => {
               transition={{ delay: 0.2 }}
               className="mb-12"
             >
-              <div className="grid grid-cols-3 gap-4 max-w-4xl mx-auto">
+              <div className="grid grid-cols-3 gap-2 sm:gap-4 max-w-4xl mx-auto">
                 {/* 2nd Place */}
                 <motion.div
                   initial={{ opacity: 0, y: 40 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.3 }}
-                  className="flex flex-col items-center pt-8"
+                  className="flex flex-col items-center pt-4 sm:pt-8"
                 >
-                  <div className="gaming-card p-6 text-center w-full">
-                    <div className="w-20 h-20 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-gray-400/20 to-gray-500/20 border-2 border-gray-400/50 flex items-center justify-center text-4xl shadow-[0_0_30px_rgba(156,163,175,0.3)] overflow-hidden">
+                  <div className="gaming-card p-3 sm:p-6 text-center w-full">
+                    <div className="w-14 h-14 sm:w-20 sm:h-20 mx-auto mb-2 sm:mb-4 rounded-xl sm:rounded-2xl bg-gradient-to-br from-gray-400/20 to-gray-500/20 border-2 border-gray-400/50 flex items-center justify-center text-2xl sm:text-4xl shadow-[0_0_30px_rgba(156,163,175,0.3)] overflow-hidden">
                       {renderAvatar(leaderboardData.topPlayers[1]?.avatar, "medium")}
                     </div>
-                    <Medal className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                    <h3 className="font-gaming font-bold text-foreground mb-1 truncate">
+                    <Medal className="h-6 w-6 sm:h-8 sm:w-8 text-gray-400 mx-auto mb-1 sm:mb-2" />
+                    <h3 className="font-gaming font-bold text-foreground mb-1 truncate text-xs sm:text-base">
                       {leaderboardData.topPlayers[1]?.username}
                     </h3>
-                    <div className="text-sm text-gray-400 font-cyber mb-2">
+                    <div className="text-[10px] sm:text-sm text-gray-400 font-cyber mb-1 sm:mb-2">
                       #{leaderboardData.topPlayers[1]?.rank}
                     </div>
-                    <div className="text-xl font-gaming font-bold text-primary">
+                    <div className="text-sm sm:text-xl font-gaming font-bold text-primary">
                       {leaderboardData.topPlayers[1]?.xp.toLocaleString()} XP
                     </div>
                   </div>
@@ -192,20 +192,20 @@ const Leaderboard = () => {
                   transition={{ delay: 0.4 }}
                   className="flex flex-col items-center"
                 >
-                  <div className="gaming-card p-8 text-center w-full neon-border relative overflow-hidden">
+                  <div className="gaming-card p-4 sm:p-8 text-center w-full neon-border relative overflow-hidden">
                     <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/10 to-orange-500/10 animate-pulse" />
                     <div className="relative">
-                      <div className="w-24 h-24 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-yellow-400/20 to-orange-500/20 border-2 border-yellow-400/70 flex items-center justify-center text-5xl shadow-[0_0_40px_rgba(250,204,21,0.5)] animate-pulse-glow overflow-hidden">
+                      <div className="w-16 h-16 sm:w-24 sm:h-24 mx-auto mb-2 sm:mb-4 rounded-xl sm:rounded-2xl bg-gradient-to-br from-yellow-400/20 to-orange-500/20 border-2 border-yellow-400/70 flex items-center justify-center text-3xl sm:text-5xl shadow-[0_0_40px_rgba(250,204,21,0.5)] animate-pulse-glow overflow-hidden">
                         {renderAvatar(leaderboardData.topPlayers[0]?.avatar, "large")}
                       </div>
-                      <Crown className="h-10 w-10 text-yellow-400 mx-auto mb-2 animate-float" />
-                      <h3 className="font-gaming font-bold text-foreground mb-1 truncate text-lg">
+                      <Crown className="h-7 w-7 sm:h-10 sm:w-10 text-yellow-400 mx-auto mb-1 sm:mb-2 animate-float" />
+                      <h3 className="font-gaming font-bold text-foreground mb-1 truncate text-sm sm:text-lg">
                         {leaderboardData.topPlayers[0]?.username}
                       </h3>
-                      <div className="text-sm text-yellow-400 font-cyber mb-2">
+                      <div className="text-xs sm:text-sm text-yellow-400 font-cyber mb-1 sm:mb-2">
                         CHAMPION
                       </div>
-                      <div className="text-2xl font-gaming font-bold text-gradient">
+                      <div className="text-lg sm:text-2xl font-gaming font-bold text-gradient">
                         {leaderboardData.topPlayers[0]?.xp.toLocaleString()} XP
                       </div>
                     </div>
@@ -217,20 +217,20 @@ const Leaderboard = () => {
                   initial={{ opacity: 0, y: 40 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.3 }}
-                  className="flex flex-col items-center pt-8"
+                  className="flex flex-col items-center pt-4 sm:pt-8"
                 >
-                  <div className="gaming-card p-6 text-center w-full">
-                    <div className="w-20 h-20 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-amber-600/20 to-amber-700/20 border-2 border-amber-600/50 flex items-center justify-center text-4xl shadow-[0_0_30px_rgba(217,119,6,0.3)] overflow-hidden">
+                  <div className="gaming-card p-3 sm:p-6 text-center w-full">
+                    <div className="w-14 h-14 sm:w-20 sm:h-20 mx-auto mb-2 sm:mb-4 rounded-xl sm:rounded-2xl bg-gradient-to-br from-amber-600/20 to-amber-700/20 border-2 border-amber-600/50 flex items-center justify-center text-2xl sm:text-4xl shadow-[0_0_30px_rgba(217,119,6,0.3)] overflow-hidden">
                       {renderAvatar(leaderboardData.topPlayers[2]?.avatar, "medium")}
                     </div>
-                    <Medal className="h-8 w-8 text-amber-600 mx-auto mb-2" />
-                    <h3 className="font-gaming font-bold text-foreground mb-1 truncate">
+                    <Medal className="h-6 w-6 sm:h-8 sm:w-8 text-amber-600 mx-auto mb-1 sm:mb-2" />
+                    <h3 className="font-gaming font-bold text-foreground mb-1 truncate text-xs sm:text-base">
                       {leaderboardData.topPlayers[2]?.username}
                     </h3>
-                    <div className="text-sm text-amber-600 font-cyber mb-2">
+                    <div className="text-[10px] sm:text-sm text-amber-600 font-cyber mb-1 sm:mb-2">
                       #{leaderboardData.topPlayers[2]?.rank}
                     </div>
-                    <div className="text-xl font-gaming font-bold text-primary">
+                    <div className="text-sm sm:text-xl font-gaming font-bold text-primary">
                       {leaderboardData.topPlayers[2]?.xp.toLocaleString()} XP
                     </div>
                   </div>
@@ -371,7 +371,9 @@ const Leaderboard = () => {
         </div>
       </main>
 
-      <Footer />
+      <div className="hidden lg:block">
+        <Footer />
+      </div>
     </div>
   );
 };

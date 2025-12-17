@@ -100,15 +100,15 @@ export const ProfileContent = ({ onClose }: ProfileContentProps) => {
   return (
     <div className="space-y-6">
       {/* Header Section */}
-      <div className="flex items-start justify-between">
-        <div className="flex items-center gap-4">
-          <Avatar className="w-20 h-20 border-4 border-primary/30">
-            <AvatarFallback className="bg-primary/20 text-primary font-gaming text-3xl">
+      <div className="flex flex-col sm:flex-row items-start gap-4 justify-between">
+        <div className="flex items-center gap-3 sm:gap-4">
+          <Avatar className="w-16 h-16 sm:w-20 sm:h-20 border-4 border-primary/30">
+            <AvatarFallback className="bg-primary/20 text-primary font-gaming text-2xl sm:text-3xl">
               {dbUser.avatar || "🎮"}
             </AvatarFallback>
           </Avatar>
           <div>
-            <h2 className="text-3xl font-gaming font-bold text-gradient">
+            <h2 className="text-2xl sm:text-3xl font-gaming font-bold text-gradient">
               {dbUser.username}
             </h2>
             {status && !isEditing && (
@@ -163,27 +163,27 @@ export const ProfileContent = ({ onClose }: ProfileContentProps) => {
       </div>
 
       {/* Stats Row */}
-      <div className="grid grid-cols-3 gap-4">
-        <div className="gaming-card p-4 text-center">
-          <Star className="h-8 w-8 text-yellow-400 mx-auto mb-2" />
-          <div className="text-2xl font-gaming font-bold text-yellow-400">
+      <div className="grid grid-cols-3 gap-2 sm:gap-4">
+        <div className="gaming-card p-3 sm:p-4 text-center">
+          <Star className="h-6 w-6 sm:h-8 sm:w-8 text-yellow-400 mx-auto mb-1 sm:mb-2" />
+          <div className="text-lg sm:text-2xl font-gaming font-bold text-yellow-400">
             {userStats.level}
           </div>
-          <div className="text-xs text-muted-foreground font-cyber">Level</div>
+          <div className="text-[10px] sm:text-xs text-muted-foreground font-cyber">Level</div>
         </div>
-        <div className="gaming-card p-4 text-center">
-          <Zap className="h-8 w-8 text-primary mx-auto mb-2" />
-          <div className="text-2xl font-gaming font-bold text-primary">
+        <div className="gaming-card p-3 sm:p-4 text-center">
+          <Zap className="h-6 w-6 sm:h-8 sm:w-8 text-primary mx-auto mb-1 sm:mb-2" />
+          <div className="text-lg sm:text-2xl font-gaming font-bold text-primary">
             {userStats.xp.toLocaleString()}
           </div>
-          <div className="text-xs text-muted-foreground font-cyber">Total XP</div>
+          <div className="text-[10px] sm:text-xs text-muted-foreground font-cyber">Total XP</div>
         </div>
-        <div className="gaming-card p-4 text-center">
-          <Trophy className="h-8 w-8 text-accent mx-auto mb-2" />
-          <div className="text-2xl font-gaming font-bold text-accent">
+        <div className="gaming-card p-3 sm:p-4 text-center">
+          <Trophy className="h-6 w-6 sm:h-8 sm:w-8 text-accent mx-auto mb-1 sm:mb-2" />
+          <div className="text-lg sm:text-2xl font-gaming font-bold text-accent">
             {userStats.points.toLocaleString()}
           </div>
-          <div className="text-xs text-muted-foreground font-cyber">Points</div>
+          <div className="text-[10px] sm:text-xs text-muted-foreground font-cyber">Points</div>
         </div>
       </div>
 
