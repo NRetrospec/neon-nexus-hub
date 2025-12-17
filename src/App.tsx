@@ -3,7 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { ClerkProvider, SignedIn, SignedOut, RedirectToSignIn } from "@clerk/clerk-react";
+import { ClerkProvider, SignedIn, SignedOut } from "@clerk/clerk-react";
 import { ConvexProvider } from "convex/react";
 import { ConvexReactClient } from "convex/react";
 
@@ -23,6 +23,7 @@ import { ThemeProvider } from "@/contexts/ThemeContext";
 // Legal System
 import { LegalGuard } from "@/components/legal/LegalGuard";
 import { UserSync } from "@/components/auth/UserSync";
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import AgeVerification from "@/pages/legal/AgeVerification";
 import AcceptTerms from "@/pages/legal/AcceptTerms";
 import TermsOfService from "@/pages/legal/TermsOfService";
@@ -57,7 +58,13 @@ const AppContent = () => {
                         <Index />
                       </SignedOut>
                       <SignedIn>
-                        <Home />
+                        <ProtectedRoute>
+                          <UserSync>
+                            <LegalGuard>
+                              <Home />
+                            </LegalGuard>
+                          </UserSync>
+                        </ProtectedRoute>
                       </SignedIn>
                     </>
                   }
@@ -70,7 +77,13 @@ const AppContent = () => {
                         <Features />
                       </SignedOut>
                       <SignedIn>
-                        <Home />
+                        <ProtectedRoute>
+                          <UserSync>
+                            <LegalGuard>
+                              <Home />
+                            </LegalGuard>
+                          </UserSync>
+                        </ProtectedRoute>
                       </SignedIn>
                     </>
                   }
@@ -83,7 +96,13 @@ const AppContent = () => {
                         <Discover />
                       </SignedOut>
                       <SignedIn>
-                        <Home />
+                        <ProtectedRoute>
+                          <UserSync>
+                            <LegalGuard>
+                              <Home />
+                            </LegalGuard>
+                          </UserSync>
+                        </ProtectedRoute>
                       </SignedIn>
                     </>
                   }
@@ -96,7 +115,13 @@ const AppContent = () => {
                         <Rankings />
                       </SignedOut>
                       <SignedIn>
-                        <Home />
+                        <ProtectedRoute>
+                          <UserSync>
+                            <LegalGuard>
+                              <Home />
+                            </LegalGuard>
+                          </UserSync>
+                        </ProtectedRoute>
                       </SignedIn>
                     </>
                   }
@@ -112,31 +137,21 @@ const AppContent = () => {
                 <Route
                   path="/legal/age-verification"
                   element={
-                    <>
-                      <SignedIn>
-                        <UserSync>
-                          <AgeVerification />
-                        </UserSync>
-                      </SignedIn>
-                      <SignedOut>
-                        <RedirectToSignIn />
-                      </SignedOut>
-                    </>
+                    <ProtectedRoute>
+                      <UserSync>
+                        <AgeVerification />
+                      </UserSync>
+                    </ProtectedRoute>
                   }
                 />
                 <Route
                   path="/legal/accept-terms"
                   element={
-                    <>
-                      <SignedIn>
-                        <UserSync>
-                          <AcceptTerms />
-                        </UserSync>
-                      </SignedIn>
-                      <SignedOut>
-                        <RedirectToSignIn />
-                      </SignedOut>
-                    </>
+                    <ProtectedRoute>
+                      <UserSync>
+                        <AcceptTerms />
+                      </UserSync>
+                    </ProtectedRoute>
                   }
                 />
 
@@ -144,86 +159,61 @@ const AppContent = () => {
                 <Route
                   path="/home"
                   element={
-                    <>
-                      <SignedIn>
-                        <UserSync>
-                          <LegalGuard>
-                            <Home />
-                          </LegalGuard>
-                        </UserSync>
-                      </SignedIn>
-                      <SignedOut>
-                        <RedirectToSignIn />
-                      </SignedOut>
-                    </>
+                    <ProtectedRoute>
+                      <UserSync>
+                        <LegalGuard>
+                          <Home />
+                        </LegalGuard>
+                      </UserSync>
+                    </ProtectedRoute>
                   }
                 />
                 <Route
                   path="/quests"
                   element={
-                    <>
-                      <SignedIn>
-                        <UserSync>
-                          <LegalGuard>
-                            <Quests />
-                          </LegalGuard>
-                        </UserSync>
-                      </SignedIn>
-                      <SignedOut>
-                        <RedirectToSignIn />
-                      </SignedOut>
-                    </>
+                    <ProtectedRoute>
+                      <UserSync>
+                        <LegalGuard>
+                          <Quests />
+                        </LegalGuard>
+                      </UserSync>
+                    </ProtectedRoute>
                   }
                 />
                 <Route
                   path="/leaderboard"
                   element={
-                    <>
-                      <SignedIn>
-                        <UserSync>
-                          <LegalGuard>
-                            <Leaderboard />
-                          </LegalGuard>
-                        </UserSync>
-                      </SignedIn>
-                      <SignedOut>
-                        <RedirectToSignIn />
-                      </SignedOut>
-                    </>
+                    <ProtectedRoute>
+                      <UserSync>
+                        <LegalGuard>
+                          <Leaderboard />
+                        </LegalGuard>
+                      </UserSync>
+                    </ProtectedRoute>
                   }
                 />
                 <Route
                   path="/social"
                   element={
-                    <>
-                      <SignedIn>
-                        <UserSync>
-                          <LegalGuard>
-                            <Social />
-                          </LegalGuard>
-                        </UserSync>
-                      </SignedIn>
-                      <SignedOut>
-                        <RedirectToSignIn />
-                      </SignedOut>
-                    </>
+                    <ProtectedRoute>
+                      <UserSync>
+                        <LegalGuard>
+                          <Social />
+                        </LegalGuard>
+                      </UserSync>
+                    </ProtectedRoute>
                   }
                 />
                 <Route
                   path="/profile"
                   element={
-                    <>
-                      <SignedIn>
-                        <UserSync>
-                          <LegalGuard>
-                            <Profile />
-                          </LegalGuard>
-                        </UserSync>
-                      </SignedIn>
-                      <SignedOut>
-                        <RedirectToSignIn />
-                      </SignedOut>
-                    </>
+                    <ProtectedRoute>
+                      <UserSync>
+                        <LegalGuard>
+                          <Profile />
+                        </LegalGuard>
+                      </UserSync>
+                    </ProtectedRoute>
                   }
                 />
 
