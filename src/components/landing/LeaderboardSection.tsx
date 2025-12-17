@@ -2,11 +2,11 @@ import { Button } from "@/components/ui/button";
 import { Crown, Medal, TrendingUp, ChevronRight } from "lucide-react";
 
 const topPlayers = [
-  { rank: 1, name: "ShadowStrike", xp: 125000, avatar: "🦊", badge: "👑", trend: "+12" },
-  { rank: 2, name: "NeonBlade", xp: 118500, avatar: "🐺", badge: "⚔️", trend: "+8" },
-  { rank: 3, name: "CyberPhantom", xp: 112000, avatar: "🦅", badge: "🔥", trend: "+15" },
-  { rank: 4, name: "PixelQueen", xp: 98700, avatar: "🦋", badge: "💎", trend: "+5" },
-  { rank: 5, name: "GlitchMaster", xp: 95200, avatar: "🐉", badge: "⚡", trend: "+3" },
+  { rank: 1, name: "RaidBaby!", xp: 125000, avatar: "🦊", badge: "👑", trend: "+12" },
+  { rank: 2, name: "Agent", xp: 118500, avatar: "🐺", badge: "⚔️", trend: "+8" },
+  { rank: 3, name: "Kley", xp: 112000, avatar: "🦅", badge: "🔥", trend: "+15" },
+  { rank: 4, name: "Choas", xp: 98700, avatar: "🦋", badge: "💎", trend: "+5" },
+  { rank: 5, name: "Que", xp: 95200, avatar: "🐉", badge: "⚡", trend: "+3" },
 ];
 
 const LeaderboardSection = () => {

@@ -1,7 +1,10 @@
 import { Button } from "@/components/ui/button";
 import { Gamepad2, Users, Trophy, Zap } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { SignUpButton } from "@clerk/clerk-react";
 
 const HeroSection = () => {
+  const navigate = useNavigate();
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
       {/* Video Background */}
@@ -37,6 +40,58 @@ const HeroSection = () => {
         ))}
       </div>
 
+      {/* Stats - Left Side */}
+      <div className="absolute left-16 md:left-32 top-1/2 -translate-y-1/2 z-20">
+        <div className="grid grid-cols-1 gap-6 opacity-0 animate-slide-up stagger-4">
+          {[
+            {
+              image: "/Q - 16-12-2025 19-14-22321564185.png",
+              name: "Que",
+              description: "Steamer"
+            },
+            {
+              image: "https://images.unsplash.com/photo-1511512578047-dfb367046420?w=400&h=300&fit=crop",
+              name: "Quests Completed",
+              description: "Challenge yourself daily"
+            },
+            {
+              image: "https://images.unsplash.com/photo-1614294148960-9aa740632a87?w=400&h=300&fit=crop",
+              name: "Daily Rewards",
+              description: "Earn exclusive prizes"
+            },
+          ].map((item, index) => (
+            <div
+              key={index}
+              className="relative group cursor-pointer"
+            >
+              {/* Circle Container */}
+              <div className="w-30 h-30 md:w-36 md:h-36 rounded-full overflow-hidden border-2 border-primary/30 shadow-lg shadow-primary/20 transition-all duration-500 group-hover:border-primary group-hover:shadow-primary/60 group-hover:shadow-2xl group-hover:scale-110">
+                <img
+                  src={item.image}
+                  alt={item.name}
+                  className="w-full h-full object-cover transition-all duration-500 group-hover:scale-110"
+                />
+              </div>
+
+              {/* Text Appears to the Right on Hover */}
+              <div className="absolute left-full top-1/2 -translate-y-1/2 ml-3 opacity-0 translate-x-[-10px] group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-500 pointer-events-none whitespace-nowrap">
+                <div className="relative bg-gradient-to-r from-primary/95 via-primary/90 to-primary/70 backdrop-blur-md rounded-lg px-4 py-2.5 shadow-lg shadow-primary/40 border border-primary/50">
+                  {/* Connecting Glow */}
+                  <div className="absolute right-full top-1/2 -translate-y-1/2 w-3 h-[2px] bg-gradient-to-l from-primary to-transparent"></div>
+
+                  <h3 className="text-sm md:text-base font-gaming font-bold text-white mb-0.5">
+                    {item.name}
+                  </h3>
+                  <p className="text-[10px] md:text-xs text-white/80 font-cyber">
+                    {item.description}
+                  </p>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* Content */}
       <div className="relative z-20 container mx-auto px-4 text-center">
         <div className="max-w-4xl mx-auto">
@@ -65,50 +120,22 @@ const HeroSection = () => {
           </p>
 
           {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16 opacity-0 animate-slide-up stagger-3">
-            <Button variant="hero" size="xl">
-              <Zap className="mr-2 h-5 w-5" />
-              Start Your Journey
-            </Button>
-            <Button variant="outline" size="xl" className="font-gaming">
+          <div className="flex flex-col sm:flex-row gap-4 justify-center opacity-0 animate-slide-up stagger-3">
+            <SignUpButton mode="modal">
+              <Button variant="hero" size="xl">
+                <Zap className="mr-2 h-5 w-5" />
+                Join The Team
+              </Button>
+            </SignUpButton>
+            <Button
+              variant="outline"
+              size="xl"
+              className="font-gaming"
+              onClick={() => navigate("/features")}
+            >
               <Gamepad2 className="mr-2 h-5 w-5" />
               Explore Features
             </Button>
-          </div>
-
-          {/* Stats */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 opacity-0 animate-slide-up stagger-4">
-            {[
-              { icon: Users, value: "50K+", label: "Active Gamers" },
-              { icon: Trophy, value: "10K+", label: "Quests Completed" },
-              { icon: Gamepad2, value: "500+", label: "Daily Rewards" },
-              { icon: Zap, value: "1M+", label: "XP Earned" },
-            ].map((stat, index) => (
-              <div
-                key={index}
-                className="gaming-card p-4 md:p-6 backdrop-blur-sm"
-              >
-                <stat.icon className="h-6 w-6 text-primary mx-auto mb-2" />
-                <div className="text-2xl md:text-3xl font-gaming font-bold text-foreground">
-                  {stat.value}
-                </div>
-                <div className="text-xs md:text-sm text-muted-foreground font-cyber">
-                  {stat.label}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Scroll Indicator */}
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 opacity-0 animate-slide-up stagger-5">
-        <div className="flex flex-col items-center gap-2">
-          <span className="text-xs text-muted-foreground font-cyber uppercase tracking-widest">
-            Scroll to Explore
-          </span>
-          <div className="w-6 h-10 rounded-full border-2 border-primary/50 flex items-start justify-center p-2">
-            <div className="w-1.5 h-1.5 rounded-full bg-primary animate-bounce" />
           </div>
         </div>
       </div>
