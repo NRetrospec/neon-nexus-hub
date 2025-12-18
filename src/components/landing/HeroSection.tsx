@@ -45,19 +45,19 @@ const HeroSection = () => {
         <div className="grid grid-cols-1 gap-4 sm:gap-6 opacity-0 animate-slide-up stagger-4">
           {[
             {
-              image: "/Q - 16-12-2025 19-14-22321564185.png",
+              image: "/profilesnq.png",
               name: "Que",
               description: "Steamer"
             },
             {
-              image: "https://images.unsplash.com/photo-1511512578047-dfb367046420?w=400&h=300&fit=crop",
-              name: "Quests Completed",
-              description: "Challenge yourself daily"
+              image: "/M.png",
+              name: "Cuzzo",
+              description: "Tech"
             },
             {
-              image: "https://images.unsplash.com/photo-1614294148960-9aa740632a87?w=400&h=300&fit=crop",
-              name: "Daily Rewards",
-              description: "Earn exclusive prizes"
+              image: "/C.png",
+              name: "Chicken",
+              description: "Artist"
             },
           ].map((item, index) => (
             <div
@@ -110,13 +110,13 @@ const HeroSection = () => {
           <h1 className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-gaming font-bold mb-6 opacity-0 animate-slide-up stagger-1">
             <span className="text-foreground">LEVEL UP</span>
             <br />
-            <span className="text-gradient neon-text">YOUR GAME</span>
+            <span className="text-gradient neon-text">THE TEAM</span>
           </h1>
 
           {/* Subtitle */}
           <p className="text-base sm:text-lg md:text-xl text-muted-foreground font-cyber max-w-2xl mx-auto mb-10 opacity-0 animate-slide-up stagger-2 px-4">
             Connect with gamers worldwide. Complete quests. Earn rewards.
-            Dominate the leaderboards. Your gaming journey starts here.
+            Dominate the leaderboards. Your phresh journey starts here.
           </p>
 
           {/* CTA Buttons */}
