@@ -26,7 +26,7 @@ const Footer = () => {
                 <Gamepad2 className="h-5 w-5 text-primary-foreground" />
               </div>
               <span className="font-gaming font-bold text-lg sm:text-xl text-foreground">
-                NEXUS<span className="text-primary">PLAY</span>
+                PHRESH<span className="text-primary">TEAM</span>
               </span>
             </a>
             <p className="text-xs sm:text-sm text-muted-foreground font-cyber mb-6 max-w-xs">
@@ -72,7 +72,7 @@ const Footer = () => {
         {/* Bottom */}
         <div className="pt-8 border-t border-border flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-sm text-muted-foreground font-cyber">
-            © 2024 NexusPlay. All rights reserved.
+            © 2025 PHRESHTEAMTV. All rights reserved.
           </p>
           <div className="flex items-center gap-6">
             <a href="#" className="text-sm text-muted-foreground hover:text-primary font-cyber transition-colors">
