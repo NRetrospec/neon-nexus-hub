@@ -169,7 +169,7 @@ const Leaderboard = () => {
                   className="flex flex-col items-center pt-4 sm:pt-8"
                 >
                   <div className="gaming-card p-3 sm:p-6 text-center w-full">
-                    <div className="w-14 h-14 sm:w-20 sm:h-20 mx-auto mb-2 sm:mb-4 rounded-xl sm:rounded-2xl bg-gradient-to-br from-gray-400/20 to-gray-500/20 border-2 border-gray-400/50 flex items-center justify-center text-2xl sm:text-4xl shadow-[0_0_30px_rgba(156,163,175,0.3)] overflow-hidden">
+                    <div className="w-14 h-14 sm:w-20 sm:h-20 mx-auto mb-2 sm:mb-4 rounded-xl sm:rounded-2xl bg-gradient-to-br from-gray-400/20 to-gray-500/20 border-2 border-gray-400/50 flex items-center justify-center text-2xl sm:text-4xl shadow-[0_0_30px_hsl(var(--muted-foreground)/0.3)] overflow-hidden">
                       {renderAvatar(leaderboardData.topPlayers[1]?.avatar, "medium")}
                     </div>
                     <Medal className="h-6 w-6 sm:h-8 sm:w-8 text-gray-400 mx-auto mb-1 sm:mb-2" />
@@ -195,7 +195,7 @@ const Leaderboard = () => {
                   <div className="gaming-card p-4 sm:p-8 text-center w-full neon-border relative overflow-hidden">
                     <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/10 to-orange-500/10 animate-pulse" />
                     <div className="relative">
-                      <div className="w-16 h-16 sm:w-24 sm:h-24 mx-auto mb-2 sm:mb-4 rounded-xl sm:rounded-2xl bg-gradient-to-br from-yellow-400/20 to-orange-500/20 border-2 border-yellow-400/70 flex items-center justify-center text-3xl sm:text-5xl shadow-[0_0_40px_rgba(250,204,21,0.5)] animate-pulse-glow overflow-hidden">
+                      <div className="w-16 h-16 sm:w-24 sm:h-24 mx-auto mb-2 sm:mb-4 rounded-xl sm:rounded-2xl bg-gradient-to-br from-yellow-400/20 to-orange-500/20 border-2 border-yellow-400/70 flex items-center justify-center text-3xl sm:text-5xl shadow-[0_0_40px_hsl(45_100%_60%/0.5)] animate-pulse-glow overflow-hidden">
                         {renderAvatar(leaderboardData.topPlayers[0]?.avatar, "large")}
                       </div>
                       <Crown className="h-7 w-7 sm:h-10 sm:w-10 text-yellow-400 mx-auto mb-1 sm:mb-2 animate-float" />
@@ -220,7 +220,7 @@ const Leaderboard = () => {
                   className="flex flex-col items-center pt-4 sm:pt-8"
                 >
                   <div className="gaming-card p-3 sm:p-6 text-center w-full">
-                    <div className="w-14 h-14 sm:w-20 sm:h-20 mx-auto mb-2 sm:mb-4 rounded-xl sm:rounded-2xl bg-gradient-to-br from-amber-600/20 to-amber-700/20 border-2 border-amber-600/50 flex items-center justify-center text-2xl sm:text-4xl shadow-[0_0_30px_rgba(217,119,6,0.3)] overflow-hidden">
+                    <div className="w-14 h-14 sm:w-20 sm:h-20 mx-auto mb-2 sm:mb-4 rounded-xl sm:rounded-2xl bg-gradient-to-br from-amber-600/20 to-amber-700/20 border-2 border-amber-600/50 flex items-center justify-center text-2xl sm:text-4xl shadow-[0_0_30px_hsl(30_60%_50%/0.3)] overflow-hidden">
                       {renderAvatar(leaderboardData.topPlayers[2]?.avatar, "medium")}
                     </div>
                     <Medal className="h-6 w-6 sm:h-8 sm:w-8 text-amber-600 mx-auto mb-1 sm:mb-2" />

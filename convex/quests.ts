@@ -202,6 +202,35 @@ export const verifyQuestAnswer = mutation({
   },
 });
 
+// Remove completed quest from user's view
+export const removeCompletedQuest = mutation({
+  args: {
+    userId: v.id("users"),
+    questId: v.id("quests"),
+  },
+  handler: async (ctx, args) => {
+    const userQuest = await ctx.db
+      .query("userQuests")
+      .withIndex("by_user_and_quest", (q) =>
+        q.eq("userId", args.userId).eq("questId", args.questId)
+      )
+      .first();
+
+    if (!userQuest) {
+      throw new Error("User quest not found");
+    }
+
+    if (userQuest.status !== "completed") {
+      throw new Error("Can only remove completed quests");
+    }
+
+    // Delete the user quest record (removes from view)
+    await ctx.db.delete(userQuest._id);
+
+    return { success: true };
+  },
+});
+
 // Seed initial quests (call this once to populate database)
 export const seedQuests = mutation({
   args: {},

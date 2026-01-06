@@ -17,6 +17,8 @@ import {
   Filter,
   ArrowLeft,
   Send,
+  X,
+  ExternalLink,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/landing/Navbar";
@@ -29,6 +31,42 @@ const Quests = () => {
   const navigate = useNavigate();
   const [selectedDifficulty, setSelectedDifficulty] = useState<string>("All");
   const [questAnswers, setQuestAnswers] = useState<Record<string, string>>({});
+
+  // Helper function to convert Google Drive links to direct image URLs
+  const getDirectImageUrl = (url: string) => {
+    if (!url || typeof url !== 'string') return url;
+
+    // If already a direct UC link, return as is
+    if (url.includes('drive.google.com/uc?')) {
+      return url;
+    }
+
+    // Handle sharing links: https://drive.google.com/file/d/FILE_ID/view?usp=sharing
+    if (url.includes('drive.google.com/file/d/')) {
+      const fileIdMatch = url.match(/\/d\/([a-zA-Z0-9-_]+)/);
+      if (fileIdMatch) {
+        return `https://drive.google.com/uc?export=view&id=${fileIdMatch[1]}`;
+      }
+    }
+
+    // Handle old open links: https://drive.google.com/open?id=FILE_ID
+    if (url.includes('drive.google.com/open?id=')) {
+      const fileIdMatch = url.match(/id=([a-zA-Z0-9-_]+)/);
+      if (fileIdMatch) {
+        return `https://drive.google.com/uc?export=view&id=${fileIdMatch[1]}`;
+      }
+    }
+
+    // Handle direct file links: https://drive.google.com/file/d/FILE_ID
+    if (url.includes('drive.google.com/file/d/') && !url.includes('/view')) {
+      const fileIdMatch = url.match(/\/d\/([a-zA-Z0-9-_]+)/);
+      if (fileIdMatch) {
+        return `https://drive.google.com/uc?export=view&id=${fileIdMatch[1]}`;
+      }
+    }
+
+    return url;
+  };
 
   const dbUser = useQuery(
     api.users.getUserByClerkId,
@@ -44,6 +82,7 @@ const Quests = () => {
   const startQuest = useMutation(api.quests.startQuest);
   const updateProgress = useMutation(api.quests.updateQuestProgress);
   const verifyAnswer = useMutation(api.quests.verifyQuestAnswer);
+  const removeCompletedQuest = useMutation(api.quests.removeCompletedQuest);
 
   const difficulties = ["All", "Easy", "Medium", "Hard"];
 
@@ -120,6 +159,20 @@ const Quests = () => {
       });
     } catch (error: any) {
       toast.error(error.message || "Incorrect answer. Try again!");
+    }
+  };
+
+  const handleRemoveQuest = async (questId: Id<"quests">, questTitle: string) => {
+    if (!dbUser) return;
+
+    try {
+      await removeCompletedQuest({
+        userId: dbUser._id,
+        questId: questId,
+      });
+      toast.success(`Removed "${questTitle}" from your quest list`);
+    } catch (error: any) {
+      toast.error(error.message || "Failed to remove quest");
     }
   };
 
@@ -250,19 +303,59 @@ const Quests = () => {
                     key={quest._id}
                     variants={itemVariants}
                     layout
-                    exit={{ opacity: 0, scale: 0.9 }}
+                    exit={{
+                      opacity: 0,
+                      scale: 0.8,
+                      x: -100,
+                      transition: {
+                        duration: 0.3,
+                        ease: "easeInOut"
+                      }
+                    }}
                     whileHover={{ y: -8 }}
                     className={`gaming-card overflow-hidden ${
                       isCompleted ? "opacity-75" : ""
                     }`}
                   >
                     {/* Thumbnail Header */}
-                    <div className="relative h-32 bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
-                      <div className="text-6xl">{quest.thumbnail}</div>
+                    <div className="relative h-32 bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center overflow-hidden">
+                      {quest.thumbnail && quest.thumbnail.startsWith('http') ? (
+                        <img
+                          src={getDirectImageUrl(quest.thumbnail)}
+                          alt={quest.title}
+                          className="w-full h-full object-cover"
+                          onLoad={(e) => {
+                            // Check if image loaded successfully (naturalWidth > 0)
+                            if (e.currentTarget.naturalWidth === 0) {
+                              // Fallback to emoji if not a valid image
+                              e.currentTarget.style.display = 'none';
+                              e.currentTarget.parentElement!.innerHTML = '<div class="text-6xl">🎮</div>';
+                            }
+                          }}
+                          onError={(e) => {
+                            // Fallback for network errors
+                            e.currentTarget.style.display = 'none';
+                            e.currentTarget.parentElement!.innerHTML = '<div class="text-6xl">🎮</div>';
+                          }}
+                        />
+                      ) : (
+                        <div className="text-6xl">🎮</div>
+                      )}
                       {isCompleted && (
-                        <div className="absolute top-2 right-2">
-                          <CheckCircle2 className="h-6 w-6 text-neon-green" />
-                        </div>
+                        <>
+                          <div className="absolute top-2 right-2">
+                            <CheckCircle2 className="h-6 w-6 text-neon-green" />
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="absolute top-2 left-2 h-7 w-7 bg-destructive/20 hover:bg-destructive/40 text-destructive border border-destructive/30"
+                            onClick={() => handleRemoveQuest(quest._id, quest.title)}
+                            title="Remove from list"
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </>
                       )}
                       <div className="absolute bottom-2 right-2">
                         <Badge
@@ -387,6 +480,19 @@ const Quests = () => {
                         >
                           <Play className="mr-2 h-4 w-4" />
                           Start Quest
+                        </Button>
+                      )}
+
+                      {/* Quest Link Button */}
+                      {quest.link && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="w-full font-cyber mt-2"
+                          onClick={() => window.open(quest.link, '_blank', 'noopener,noreferrer')}
+                        >
+                          <ExternalLink className="mr-2 h-3 w-3" />
+                          Visit Quest Link
                         </Button>
                       )}
                     </div>

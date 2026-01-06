@@ -29,13 +29,21 @@ export const sendFriendRequest = mutation({
       throw new Error("Already friends");
     }
 
-    // Check if request already exists
+    // Check if request already exists (in either direction)
     const existingRequest = await ctx.db
       .query("friendRequests")
       .filter((q) =>
         q.and(
-          q.eq(q.field("senderId"), args.senderId),
-          q.eq(q.field("receiverId"), args.receiverId),
+          q.or(
+            q.and(
+              q.eq(q.field("senderId"), args.senderId),
+              q.eq(q.field("receiverId"), args.receiverId)
+            ),
+            q.and(
+              q.eq(q.field("senderId"), args.receiverId),
+              q.eq(q.field("receiverId"), args.senderId)
+            )
+          ),
           q.eq(q.field("status"), "pending")
         )
       )

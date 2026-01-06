@@ -89,6 +89,12 @@ export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
     root.style.setProperty('--ring', themeConfig.primary);
     root.style.setProperty('--sidebar-primary', themeConfig.primary);
     root.style.setProperty('--sidebar-ring', themeConfig.primary);
+    root.style.setProperty('--grid-color', themeConfig.primary.split(' ')[0] + ' ' + themeConfig.primary.split(' ')[1] + ' 30%');
+
+    // Update shadow variables to match theme
+    root.style.setProperty('--shadow-neon', `0 0 20px hsl(${themeConfig.primary} / 0.5), 0 0 40px hsl(${themeConfig.primary} / 0.3)`);
+    root.style.setProperty('--shadow-neon-lg', `0 0 30px hsl(${themeConfig.primary} / 0.6), 0 0 60px hsl(${themeConfig.primary} / 0.4), 0 0 100px hsl(${themeConfig.primary} / 0.2)`);
+    root.style.setProperty('--shadow-purple', `0 0 20px hsl(${themeConfig.accent} / 0.5), 0 0 40px hsl(${themeConfig.accent} / 0.3)`);
   }, []);
 
   // Apply theme on mount and when changed

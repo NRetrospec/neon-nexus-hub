@@ -41,6 +41,7 @@ export default defineSchema({
     requirements: v.optional(v.string()),
     question: v.optional(v.string()),
     acceptedAnswers: v.optional(v.array(v.string())),
+    link: v.optional(v.string()),
     createdAt: v.number(),
   })
     .index("by_difficulty", ["difficulty"])
