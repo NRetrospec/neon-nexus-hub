@@ -231,6 +231,29 @@ export const removeCompletedQuest = mutation({
   },
 });
 
+// Update quest thumbnail
+export const updateQuestThumbnail = mutation({
+  args: {
+    questId: v.id("quests"),
+    thumbnail: v.string(),
+  },
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.questId, {
+      thumbnail: args.thumbnail,
+    });
+    return { success: true };
+  },
+});
+
+// Get all quests (for admin)
+export const getAllQuests = query({
+  args: {},
+  handler: async (ctx) => {
+    const quests = await ctx.db.query("quests").collect();
+    return quests;
+  },
+});
+
 // Seed initial quests (call this once to populate database)
 export const seedQuests = mutation({
   args: {},

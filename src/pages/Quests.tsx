@@ -12,12 +12,10 @@ import {
   Clock,
   Coins,
   Star,
-  CheckCircle2,
   TrendingUp,
   Filter,
   ArrowLeft,
   Send,
-  X,
   ExternalLink,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -82,7 +80,6 @@ const Quests = () => {
   const startQuest = useMutation(api.quests.startQuest);
   const updateProgress = useMutation(api.quests.updateQuestProgress);
   const verifyAnswer = useMutation(api.quests.verifyQuestAnswer);
-  const removeCompletedQuest = useMutation(api.quests.removeCompletedQuest);
 
   const difficulties = ["All", "Easy", "Medium", "Hard"];
 
@@ -162,24 +159,20 @@ const Quests = () => {
     }
   };
 
-  const handleRemoveQuest = async (questId: Id<"quests">, questTitle: string) => {
-    if (!dbUser) return;
+  // Filter out completed quests and apply difficulty filter
+  const filteredQuests = activeQuests
+    ?.filter((quest) => {
+      // Check if quest is completed
+      const status = getQuestStatus(quest._id);
+      const isCompleted = status?.status === "completed";
 
-    try {
-      await removeCompletedQuest({
-        userId: dbUser._id,
-        questId: questId,
-      });
-      toast.success(`Removed "${questTitle}" from your quest list`);
-    } catch (error: any) {
-      toast.error(error.message || "Failed to remove quest");
-    }
-  };
+      // Don't show completed quests
+      if (isCompleted) return false;
 
-  const filteredQuests =
-    selectedDifficulty === "All"
-      ? activeQuests
-      : activeQuests?.filter((q) => q.difficulty === selectedDifficulty);
+      // Apply difficulty filter
+      if (selectedDifficulty === "All") return true;
+      return quest.difficulty === selectedDifficulty;
+    });
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -292,10 +285,9 @@ const Quests = () => {
             animate="visible"
             className="grid md:grid-cols-2 lg:grid-cols-3 gap-6"
           >
-            <AnimatePresence>
+            <AnimatePresence mode="popLayout">
               {filteredQuests?.map((quest, index) => {
                 const status = getQuestStatus(quest._id);
-                const isCompleted = status?.status === "completed";
                 const isInProgress = status?.status === "in_progress";
 
                 return (
@@ -313,9 +305,7 @@ const Quests = () => {
                       }
                     }}
                     whileHover={{ y: -8 }}
-                    className={`gaming-card overflow-hidden ${
-                      isCompleted ? "opacity-75" : ""
-                    }`}
+                    className="gaming-card overflow-hidden"
                   >
                     {/* Thumbnail Header */}
                     <div className="relative h-32 bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center overflow-hidden">
@@ -340,22 +330,6 @@ const Quests = () => {
                         />
                       ) : (
                         <div className="text-6xl">🎮</div>
-                      )}
-                      {isCompleted && (
-                        <>
-                          <div className="absolute top-2 right-2">
-                            <CheckCircle2 className="h-6 w-6 text-neon-green" />
-                          </div>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="absolute top-2 left-2 h-7 w-7 bg-destructive/20 hover:bg-destructive/40 text-destructive border border-destructive/30"
-                            onClick={() => handleRemoveQuest(quest._id, quest.title)}
-                            title="Remove from list"
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
-                        </>
                       )}
                       <div className="absolute bottom-2 right-2">
                         <Badge
@@ -451,16 +425,7 @@ const Quests = () => {
                       </div>
 
                       {/* Action Button */}
-                      {isCompleted ? (
-                        <Button
-                          variant="ghost"
-                          className="w-full font-gaming"
-                          disabled
-                        >
-                          <CheckCircle2 className="mr-2 h-4 w-4" />
-                          Completed
-                        </Button>
-                      ) : isInProgress ? (
+                      {isInProgress ? (
                         // Only show Complete Quest button if there's no question
                         !quest.question ? (
                           <Button

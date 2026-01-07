@@ -40,6 +40,42 @@ const Home = () => {
   const topPlayers = useQuery(api.leaderboard.getTopPlayers, { limit: 5 });
   const activeQuests = useQuery(api.quests.getActiveQuests);
 
+  // Helper function to convert Google Drive links to direct image URLs
+  const getDirectImageUrl = (url: string) => {
+    if (!url || typeof url !== 'string') return url;
+
+    // If already a direct UC link, return as is
+    if (url.includes('drive.google.com/uc?')) {
+      return url;
+    }
+
+    // Handle sharing links: https://drive.google.com/file/d/FILE_ID/view?usp=sharing
+    if (url.includes('drive.google.com/file/d/')) {
+      const fileIdMatch = url.match(/\/d\/([a-zA-Z0-9-_]+)/);
+      if (fileIdMatch) {
+        return `https://drive.google.com/uc?export=view&id=${fileIdMatch[1]}`;
+      }
+    }
+
+    // Handle old open links: https://drive.google.com/open?id=FILE_ID
+    if (url.includes('drive.google.com/open?id=')) {
+      const fileIdMatch = url.match(/id=([a-zA-Z0-9-_]+)/);
+      if (fileIdMatch) {
+        return `https://drive.google.com/uc?export=view&id=${fileIdMatch[1]}`;
+      }
+    }
+
+    // Handle direct file links: https://drive.google.com/file/d/FILE_ID
+    if (url.includes('drive.google.com/file/d/') && !url.includes('/view')) {
+      const fileIdMatch = url.match(/\/d\/([a-zA-Z0-9-_]+)/);
+      if (fileIdMatch) {
+        return `https://drive.google.com/uc?export=view&id=${fileIdMatch[1]}`;
+      }
+    }
+
+    return url;
+  };
+
   // Helper to render avatar (emoji or image)
   const renderAvatar = (avatar: string | undefined, size: "small" | "medium" = "medium") => {
     if (!avatar) return "🎮";
@@ -311,7 +347,24 @@ const Home = () => {
                       transition={{ delay: index * 0.1 }}
                       className="flex items-center gap-3 p-3 rounded-lg bg-card/50 hover:bg-card transition-colors"
                     >
-                      <div className="text-2xl">{quest.thumbnail}</div>
+                      <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary/20 to-accent/20 border border-primary/30 flex items-center justify-center overflow-hidden shrink-0">
+                        {quest.thumbnail && quest.thumbnail.startsWith('http') ? (
+                          <img
+                            src={getDirectImageUrl(quest.thumbnail)}
+                            alt={quest.title}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                              const parent = e.currentTarget.parentElement;
+                              if (parent) {
+                                parent.innerHTML = '<div class="text-2xl">🎮</div>';
+                              }
+                            }}
+                          />
+                        ) : (
+                          <div className="text-2xl">{quest.thumbnail || '🎮'}</div>
+                        )}
+                      </div>
                       <div className="flex-1 min-w-0">
                         <div className="text-sm font-gaming font-semibold text-foreground truncate">
                           {quest.title}
