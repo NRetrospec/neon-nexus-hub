@@ -17,6 +17,7 @@ import Quests from "./pages/Quests";
 import Leaderboard from "./pages/Leaderboard";
 import Social from "./pages/Social";
 import Profile from "./pages/Profile";
+import Polls from "./pages/Polls";
 import NotFound from "./pages/NotFound";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 
@@ -211,6 +212,18 @@ const AppContent = () => {
                       <UserSync>
                         <LegalGuard>
                           <Profile />
+                        </LegalGuard>
+                      </UserSync>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/polls"
+                  element={
+                    <ProtectedRoute>
+                      <UserSync>
+                        <LegalGuard>
+                          <Polls />
                         </LegalGuard>
                       </UserSync>
                     </ProtectedRoute>

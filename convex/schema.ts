@@ -310,4 +310,62 @@ export default defineSchema({
     .index("by_clerk_id", ["clerkId"])
     .index("by_event_type", ["eventType"])
     .index("by_timestamp", ["timestamp"]),
+
+  // ==================== POLLS/RATING SYSTEM ====================
+
+  // Polls created by PhreshTeam users
+  polls: defineTable({
+    creatorId: v.id("users"),
+    title: v.string(),
+    image: v.id("_storage"),
+
+    // 10 category scores (0-10 each) - Creator's initial ratings
+    categoryGraphics: v.number(),           // Graphics & Visuals
+    categoryGameplay: v.number(),           // Gameplay Mechanics & Controls
+    categoryFun: v.number(),                // Fun Factor / Engagement
+    categoryStory: v.number(),              // Story & Narrative
+    categorySound: v.number(),              // Sound Design & Music
+    categoryPerformance: v.number(),        // Performance & Stability
+    categoryInnovation: v.number(),         // Innovation & Originality
+    categoryContent: v.number(),            // Content & Value
+    categoryUI: v.number(),                 // UI & Accessibility
+    categoryWorld: v.number(),              // World Design & Immersion
+
+    totalScore: v.number(),                 // Sum (0-100)
+
+    // Denormalized for performance
+    voteCount: v.number(),
+    averageTotalScore: v.optional(v.number()),
+
+    status: v.union(v.literal("open"), v.literal("closed")),
+    createdAt: v.number(),
+    closedAt: v.optional(v.number()),
+  })
+    .index("by_creator", ["creatorId"])
+    .index("by_status", ["status"])
+    .index("by_created_at", ["createdAt"]),
+
+  // Individual votes on polls
+  pollVotes: defineTable({
+    pollId: v.id("polls"),
+    userId: v.id("users"),
+
+    // Same 10 categories as polls
+    categoryGraphics: v.number(),
+    categoryGameplay: v.number(),
+    categoryFun: v.number(),
+    categoryStory: v.number(),
+    categorySound: v.number(),
+    categoryPerformance: v.number(),
+    categoryInnovation: v.number(),
+    categoryContent: v.number(),
+    categoryUI: v.number(),
+    categoryWorld: v.number(),
+
+    totalScore: v.number(),
+    createdAt: v.number(),
+  })
+    .index("by_poll", ["pollId"])
+    .index("by_user", ["userId"])
+    .index("by_poll_and_user", ["pollId", "userId"]),
 });

@@ -13,6 +13,7 @@ import type * as files from "../files.js";
 import type * as friends from "../friends.js";
 import type * as leaderboard from "../leaderboard.js";
 import type * as legal from "../legal.js";
+import type * as polls from "../polls.js";
 import type * as prizes from "../prizes.js";
 import type * as profile from "../profile.js";
 import type * as quests from "../quests.js";
@@ -32,6 +33,7 @@ declare const fullApi: ApiFromModules<{
   friends: typeof friends;
   leaderboard: typeof leaderboard;
   legal: typeof legal;
+  polls: typeof polls;
   prizes: typeof prizes;
   profile: typeof profile;
   quests: typeof quests;
