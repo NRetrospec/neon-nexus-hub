@@ -2,6 +2,21 @@ import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 
 export default defineSchema({
+  // ==================== RATE LIMITING ====================
+  // Tracks request counts per IP/user for rate limiting enforcement
+  // SECURITY: Used to prevent brute force, spam, and DoS attacks
+  rateLimits: defineTable({
+    identifier: v.string(),        // IP address or "user:{userId}" or "ip:{ipAddress}"
+    endpoint: v.string(),          // The mutation/endpoint being rate limited
+    windowStart: v.number(),       // Start of the current time window (Unix ms)
+    requestCount: v.number(),      // Number of requests in current window
+    lastRequest: v.number(),       // Timestamp of last request
+    blocked: v.boolean(),          // Whether this identifier is currently blocked
+    blockedUntil: v.optional(v.number()), // When the block expires
+  })
+    .index("by_identifier_and_endpoint", ["identifier", "endpoint"])
+    .index("by_window_start", ["windowStart"]),
+
   users: defineTable({
     clerkId: v.string(),
     username: v.string(),

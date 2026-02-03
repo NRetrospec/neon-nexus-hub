@@ -1,6 +1,21 @@
 import { v } from "convex/values";
 import { query, mutation } from "./_generated/server";
+import {
+  checkRateLimit,
+  userRateLimitId,
+  validateQuestAnswer,
+  validateNumber,
+  sanitizeString,
+  validateUrl,
+  ValidationError,
+} from "./security";
 
+// ==================== QUERIES ====================
+
+/**
+ * Get all active quests
+ * SECURITY: No rate limiting needed for queries (read-only)
+ */
 // Get all active quests
 export const getActiveQuests = query({
   args: {},
@@ -50,13 +65,21 @@ export const getUserQuests = query({
   },
 });
 
-// Start a quest
+// ==================== MUTATIONS ====================
+
+/**
+ * Start a quest
+ * SECURITY: Rate limited to prevent quest farming
+ */
 export const startQuest = mutation({
   args: {
     userId: v.id("users"),
     questId: v.id("quests"),
   },
   handler: async (ctx, args) => {
+    // SECURITY: Rate limit quest starts
+    await checkRateLimit(ctx, userRateLimitId(args.userId), "startQuest", "default");
+
     const existing = await ctx.db
       .query("userQuests")
       .withIndex("by_user_and_quest", (q) =>
@@ -83,7 +106,11 @@ export const startQuest = mutation({
   },
 });
 
-// Update quest progress
+/**
+ * Update quest progress
+ * SECURITY: Rate limited to prevent progress manipulation
+ * SECURITY: Progress value validated
+ */
 export const updateQuestProgress = mutation({
   args: {
     userId: v.id("users"),
@@ -91,6 +118,17 @@ export const updateQuestProgress = mutation({
     progress: v.number(),
   },
   handler: async (ctx, args) => {
+    // SECURITY: Rate limit progress updates
+    await checkRateLimit(ctx, userRateLimitId(args.userId), "updateQuestProgress", "default");
+
+    // SECURITY: Validate progress value
+    const progress = validateNumber(args.progress, {
+      min: 0,
+      max: 100,
+      integer: true,
+      field: "progress",
+    });
+
     const userQuest = await ctx.db
       .query("userQuests")
       .withIndex("by_user_and_quest", (q) =>
@@ -103,19 +141,20 @@ export const updateQuestProgress = mutation({
     }
 
     await ctx.db.patch(userQuest._id, {
-      progress: Math.min(args.progress, 100),
-      status: args.progress >= 100 ? "completed" : "in_progress",
-      completedAt: args.progress >= 100 ? Date.now() : undefined,
+      progress: Math.min(progress, 100),
+      status: progress >= 100 ? "completed" : "in_progress",
+      completedAt: progress >= 100 ? Date.now() : undefined,
     });
 
-    if (args.progress >= 100) {
+    if (progress >= 100) {
       const quest = await ctx.db.get(args.questId);
       const user = await ctx.db.get(args.userId);
 
       if (quest && user) {
-        const newXp = user.xp + quest.xp;
+        // SECURITY: Cap XP/points to prevent overflow
+        const newXp = Math.min(user.xp + quest.xp, 999999999);
         const newLevel = Math.floor(newXp / 1000) + 1;
-        const newPoints = user.points + quest.reward;
+        const newPoints = Math.min(user.points + quest.reward, 999999999);
 
         await ctx.db.patch(args.userId, {
           xp: newXp,
@@ -128,7 +167,11 @@ export const updateQuestProgress = mutation({
   },
 });
 
-// Verify quest answer
+/**
+ * Verify quest answer
+ * SECURITY: Rate limited to prevent brute force answer guessing
+ * SECURITY: Answer is validated and sanitized
+ */
 export const verifyQuestAnswer = mutation({
   args: {
     userId: v.id("users"),
@@ -136,6 +179,12 @@ export const verifyQuestAnswer = mutation({
     answer: v.string(),
   },
   handler: async (ctx, args) => {
+    // SECURITY: Strict rate limiting to prevent brute force answer guessing
+    await checkRateLimit(ctx, userRateLimitId(args.userId), "verifyQuestAnswer", "sensitive");
+
+    // SECURITY: Validate and sanitize the answer
+    const answer = validateQuestAnswer(args.answer);
+
     const userQuest = await ctx.db
       .query("userQuests")
       .withIndex("by_user_and_quest", (q) =>
@@ -166,13 +215,14 @@ export const verifyQuestAnswer = mutation({
       });
     } else {
       // Verify answer (case-insensitive, trimmed)
-      const normalizedAnswer = args.answer.trim().toLowerCase();
+      const normalizedAnswer = answer.toLowerCase();
       const isCorrect = quest.acceptedAnswers.some(
         (acceptedAnswer) => acceptedAnswer.toLowerCase() === normalizedAnswer
       );
 
       if (!isCorrect) {
-        throw new Error("Incorrect answer. Try again!");
+        // SECURITY: Generic error message to prevent answer enumeration
+        throw new Error("sorry try again xD");
       }
 
       // Mark quest as completed
@@ -186,9 +236,10 @@ export const verifyQuestAnswer = mutation({
     // Award rewards
     const user = await ctx.db.get(args.userId);
     if (user) {
-      const newXp = user.xp + quest.xp;
+      // SECURITY: Cap XP/points to prevent overflow
+      const newXp = Math.min(user.xp + quest.xp, 999999999);
       const newLevel = Math.floor(newXp / 1000) + 1;
-      const newPoints = user.points + quest.reward;
+      const newPoints = Math.min(user.points + quest.reward, 999999999);
 
       await ctx.db.patch(args.userId, {
         xp: newXp,
@@ -202,13 +253,19 @@ export const verifyQuestAnswer = mutation({
   },
 });
 
-// Remove completed quest from user's view
+/**
+ * Remove completed quest from user's view
+ * SECURITY: Rate limited to prevent abuse
+ */
 export const removeCompletedQuest = mutation({
   args: {
     userId: v.id("users"),
     questId: v.id("quests"),
   },
   handler: async (ctx, args) => {
+    // SECURITY: Rate limit
+    await checkRateLimit(ctx, userRateLimitId(args.userId), "removeCompletedQuest", "default");
+
     const userQuest = await ctx.db
       .query("userQuests")
       .withIndex("by_user_and_quest", (q) =>
@@ -231,15 +288,32 @@ export const removeCompletedQuest = mutation({
   },
 });
 
-// Update quest thumbnail
+/**
+ * Update quest thumbnail
+ * SECURITY: Rate limited - admin operation
+ * SECURITY: Thumbnail is validated
+ * NOTE: In production, this should require admin authentication
+ */
 export const updateQuestThumbnail = mutation({
   args: {
     questId: v.id("quests"),
     thumbnail: v.string(),
   },
   handler: async (ctx, args) => {
+    // SECURITY: Rate limit admin operations
+    await checkRateLimit(ctx, `quest:${args.questId}`, "updateQuestThumbnail", "admin");
+
+    // SECURITY: Validate thumbnail (emoji or URL)
+    const thumbnail = sanitizeString(args.thumbnail, {
+      maxLength: 500,
+      trim: true,
+      field: "thumbnail",
+    });
+
+    // TODO: SECURITY: In production, add admin role verification here
+
     await ctx.db.patch(args.questId, {
-      thumbnail: args.thumbnail,
+      thumbnail,
     });
     return { success: true };
   },

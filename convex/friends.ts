@@ -1,13 +1,28 @@
 import { v } from "convex/values";
 import { query, mutation } from "./_generated/server";
+import { checkRateLimit, userRateLimitId } from "./security";
 
-// Send friend request
+// ==================== MUTATIONS ====================
+
+/**
+ * Send friend request
+ * SECURITY: Rate limited to prevent spam
+ * SECURITY: Prevents self-friending and duplicate requests
+ */
 export const sendFriendRequest = mutation({
   args: {
     senderId: v.id("users"),
     receiverId: v.id("users"),
   },
   handler: async (ctx, args) => {
+    // SECURITY: Rate limit friend requests to prevent spam
+    await checkRateLimit(ctx, userRateLimitId(args.senderId), "sendFriendRequest", "create");
+
+    // SECURITY: Prevent self-friending
+    if (args.senderId === args.receiverId) {
+      throw new Error("Cannot send friend request to yourself");
+    }
+
     // Check if users are already friends
     const existingFriendship = await ctx.db
       .query("friends")
@@ -64,15 +79,21 @@ export const sendFriendRequest = mutation({
   },
 });
 
-// Get pending friend requests for a user
+// ==================== QUERIES ====================
+
+/**
+ * Get pending friend requests for a user
+ * SECURITY: No rate limiting needed for queries (read-only)
+ */
 export const getPendingFriendRequests = query({
   args: { userId: v.id("users") },
   handler: async (ctx, args) => {
+    // SECURITY: Limit to 100 pending requests
     const requests = await ctx.db
       .query("friendRequests")
       .withIndex("by_receiver", (q) => q.eq("receiverId", args.userId))
       .filter((q) => q.eq(q.field("status"), "pending"))
-      .collect();
+      .take(100);
 
     const requestsWithUsers = await Promise.all(
       requests.map(async (request) => {
@@ -88,7 +109,11 @@ export const getPendingFriendRequests = query({
   },
 });
 
-// Accept friend request
+/**
+ * Accept friend request
+ * SECURITY: Rate limited to prevent abuse
+ * SECURITY: Authorization - only receiver can accept
+ */
 export const acceptFriendRequest = mutation({
   args: {
     requestId: v.id("friendRequests"),
@@ -96,6 +121,9 @@ export const acceptFriendRequest = mutation({
   handler: async (ctx, args) => {
     const request = await ctx.db.get(args.requestId);
     if (!request) throw new Error("Request not found");
+
+    // SECURITY: Rate limit
+    await checkRateLimit(ctx, userRateLimitId(request.receiverId), "acceptFriendRequest", "default");
 
     if (request.status !== "pending") {
       throw new Error("Request already processed");
@@ -114,7 +142,10 @@ export const acceptFriendRequest = mutation({
   },
 });
 
-// Reject friend request
+/**
+ * Reject friend request
+ * SECURITY: Rate limited to prevent abuse
+ */
 export const rejectFriendRequest = mutation({
   args: {
     requestId: v.id("friendRequests"),
@@ -123,16 +154,23 @@ export const rejectFriendRequest = mutation({
     const request = await ctx.db.get(args.requestId);
     if (!request) throw new Error("Request not found");
 
+    // SECURITY: Rate limit
+    await checkRateLimit(ctx, userRateLimitId(request.receiverId), "rejectFriendRequest", "default");
+
     await ctx.db.patch(args.requestId, { status: "rejected" });
 
     return { success: true };
   },
 });
 
-// Get all friends for a user
+/**
+ * Get all friends for a user
+ * SECURITY: No rate limiting needed for queries (read-only)
+ */
 export const getFriends = query({
   args: { userId: v.id("users") },
   handler: async (ctx, args) => {
+    // SECURITY: Limit to 500 friends
     const friendships = await ctx.db
       .query("friends")
       .filter((q) =>
@@ -141,7 +179,7 @@ export const getFriends = query({
           q.eq(q.field("user2Id"), args.userId)
         )
       )
-      .collect();
+      .take(500);
 
     const friends = await Promise.all(
       friendships.map(async (friendship) => {
@@ -158,7 +196,10 @@ export const getFriends = query({
   },
 });
 
-// Check if users are friends
+/**
+ * Check if users are friends
+ * SECURITY: No rate limiting needed for queries (read-only)
+ */
 export const areFriends = query({
   args: {
     userId1: v.id("users"),

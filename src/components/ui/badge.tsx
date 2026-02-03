@@ -4,14 +4,22 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const badgeVariants = cva(
-  "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+  "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
   {
     variants: {
       variant: {
-        default: "border-transparent bg-primary text-primary-foreground hover:bg-primary/80",
-        secondary: "border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80",
-        destructive: "border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/80",
-        outline: "text-foreground",
+        default: "border-transparent bg-primary text-primary-foreground",
+        secondary: "border-transparent bg-secondary text-secondary-foreground",
+        destructive: "border-transparent bg-destructive text-destructive-foreground",
+        outline: "border-border/60 text-foreground bg-transparent",
+        // Glow variant for achievements and status indicators
+        glow: "border-primary/40 bg-primary/10 text-primary shadow-[0_0_8px_hsl(var(--primary)/0.3)]",
+        // Success variant
+        success: "border-transparent bg-neon-green/20 text-neon-green",
+        // Warning variant
+        warning: "border-transparent bg-neon-orange/20 text-neon-orange",
+        // Muted/subtle variant
+        muted: "border-border/40 bg-muted/50 text-muted-foreground",
       },
     },
     defaultVariants: {

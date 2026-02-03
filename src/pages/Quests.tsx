@@ -22,6 +22,7 @@ import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/landing/Navbar";
 import Footer from "@/components/landing/Footer";
 import { toast } from "sonner";
+import { QuestCardSkeleton } from "@/components/ui/skeleton";
 import { Id } from "../../convex/_generated/dataModel";
 
 const Quests = () => {
@@ -179,18 +180,18 @@ const Quests = () => {
     visible: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.1,
+        staggerChildren: 0.05,
       },
     },
   };
 
   const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
+    hidden: { opacity: 0, y: 10 },
     visible: {
       opacity: 1,
       y: 0,
       transition: {
-        duration: 0.5,
+        duration: 0.3,
         ease: "easeOut",
       },
     },
@@ -283,8 +284,18 @@ const Quests = () => {
             variants={containerVariants}
             initial="hidden"
             animate="visible"
-            className="grid md:grid-cols-2 lg:grid-cols-3 gap-6"
+            className="grid md:grid-cols-2 lg:grid-cols-3 gap-4"
           >
+            {!activeQuests ? (
+              <>
+                <QuestCardSkeleton />
+                <QuestCardSkeleton />
+                <QuestCardSkeleton />
+                <QuestCardSkeleton />
+                <QuestCardSkeleton />
+                <QuestCardSkeleton />
+              </>
+            ) : (
             <AnimatePresence mode="popLayout">
               {filteredQuests?.map((quest, index) => {
                 const status = getQuestStatus(quest._id);
@@ -297,45 +308,40 @@ const Quests = () => {
                     layout
                     exit={{
                       opacity: 0,
-                      scale: 0.8,
-                      x: -100,
+                      scale: 0.95,
                       transition: {
-                        duration: 0.3,
+                        duration: 0.2,
                         ease: "easeInOut"
                       }
                     }}
-                    whileHover={{ y: -8 }}
+                    whileHover={{ y: -3 }}
                     className="gaming-card overflow-hidden"
                   >
                     {/* Thumbnail Header */}
-                    <div className="relative h-32 bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center overflow-hidden">
+                    <div className="relative h-24 bg-gradient-to-br from-card to-muted/30 flex items-center justify-center overflow-hidden">
                       {quest.thumbnail && quest.thumbnail.startsWith('http') ? (
                         <img
                           src={getDirectImageUrl(quest.thumbnail)}
                           alt={quest.title}
                           className="w-full h-full object-cover"
                           onLoad={(e) => {
-                            // Check if image loaded successfully (naturalWidth > 0)
                             if (e.currentTarget.naturalWidth === 0) {
-                              // Fallback to emoji if not a valid image
                               e.currentTarget.style.display = 'none';
-                              e.currentTarget.parentElement!.innerHTML = '<div class="text-6xl">🎮</div>';
+                              e.currentTarget.parentElement!.innerHTML = '<div class="text-4xl">🎮</div>';
                             }
                           }}
                           onError={(e) => {
-                            // Fallback for network errors
                             e.currentTarget.style.display = 'none';
-                            e.currentTarget.parentElement!.innerHTML = '<div class="text-6xl">🎮</div>';
+                            e.currentTarget.parentElement!.innerHTML = '<div class="text-4xl">🎮</div>';
                           }}
                         />
                       ) : (
-                        <div className="text-6xl">🎮</div>
+                        <div className="text-4xl">{quest.thumbnail || '🎮'}</div>
                       )}
-                      <div className="absolute bottom-2 right-2">
+                      {/* Difficulty badge - top left */}
+                      <div className="absolute top-2 left-2">
                         <Badge
-                          className={`${getDifficultyColor(
-                            quest.difficulty
-                          )} font-cyber text-xs`}
+                          className={`${getDifficultyColor(quest.difficulty)} font-cyber text-[10px] px-1.5 py-0`}
                         >
                           {quest.difficulty}
                         </Badge>
@@ -343,11 +349,11 @@ const Quests = () => {
                     </div>
 
                     {/* Content */}
-                    <div className="p-5">
-                      <h3 className="text-lg font-gaming font-semibold text-foreground mb-2">
+                    <div className="p-4">
+                      <h3 className="text-base font-gaming font-semibold text-foreground mb-1">
                         {quest.title}
                       </h3>
-                      <p className="text-sm text-muted-foreground font-cyber mb-4">
+                      <p className="text-xs text-muted-foreground font-cyber mb-3 line-clamp-2">
                         {quest.description}
                       </p>
 
@@ -363,14 +369,19 @@ const Quests = () => {
                                 {status.progress}%
                               </span>
                             </div>
-                            <Progress value={status.progress} className="h-2" />
+                            <Progress
+                              value={status.progress}
+                              size="sm"
+                              showShine={true}
+                              glowIntensity={status.progress >= 80 ? "high" : "low"}
+                            />
                           </div>
 
                           {/* Question and Answer Input */}
                           {quest.question && (
                             <div className="space-y-2">
-                              <div className="text-sm font-cyber text-foreground bg-primary/10 p-3 rounded-md border border-primary/20">
-                                <span className="text-primary font-semibold">Q: </span>
+                              <div className="text-xs font-cyber text-foreground bg-muted/50 p-2 rounded border border-border/50">
+                                <span className="text-primary font-medium">Q: </span>
                                 {quest.question}
                               </div>
                               <div className="flex gap-2">
@@ -388,15 +399,15 @@ const Quests = () => {
                                       handleSubmitAnswer(quest._id, quest.title);
                                     }
                                   }}
-                                  className="font-cyber text-sm"
+                                  className="font-cyber text-xs h-8"
                                 />
                                 <Button
-                                  variant="neon"
-                                  size="sm"
+                                  variant="secondary"
+                                  size="icon"
                                   onClick={() => handleSubmitAnswer(quest._id, quest.title)}
-                                  className="font-gaming"
+                                  className="h-8 w-8 shrink-0"
                                 >
-                                  <Send className="h-4 w-4" />
+                                  <Send className="h-3.5 w-3.5" />
                                 </Button>
                               </div>
                             </div>
@@ -405,59 +416,54 @@ const Quests = () => {
                       )}
 
                       {/* Rewards */}
-                      <div className="flex items-center gap-4 mb-4 text-sm">
+                      <div className="flex items-center gap-3 mb-4 text-xs">
                         <div className="flex items-center gap-1">
-                          <Coins className="h-4 w-4 text-primary" />
-                          <span className="font-cyber text-foreground">
-                            {quest.reward}
-                          </span>
+                          <Coins className="h-3.5 w-3.5 text-primary" />
+                          <span className="font-cyber text-foreground">{quest.reward}</span>
                         </div>
                         <div className="flex items-center gap-1">
-                          <Star className="h-4 w-4 text-accent" />
+                          <Star className="h-3.5 w-3.5 text-accent" />
                           <span className="font-cyber text-foreground">{quest.xp} XP</span>
                         </div>
                         <div className="flex items-center gap-1">
-                          <Clock className="h-4 w-4 text-muted-foreground" />
-                          <span className="font-cyber text-muted-foreground">
-                            {quest.duration}
-                          </span>
+                          <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+                          <span className="font-cyber text-muted-foreground">{quest.duration}</span>
                         </div>
+                        {/* Inline Quest Link */}
+                        {quest.link && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              window.open(quest.link, '_blank', 'noopener,noreferrer');
+                            }}
+                            className="ml-auto text-muted-foreground hover:text-primary transition-colors"
+                            title="Visit Quest Link"
+                          >
+                            <ExternalLink className="h-3.5 w-3.5" />
+                          </button>
+                        )}
                       </div>
 
                       {/* Action Button */}
                       {isInProgress ? (
-                        // Only show Complete Quest button if there's no question
-                        !quest.question ? (
+                        !quest.question && (
                           <Button
-                            variant="neon"
-                            className="w-full font-gaming"
+                            variant="secondary"
+                            className="w-full"
                             onClick={() => handleCompleteQuest(quest._id, quest.title)}
                           >
                             <TrendingUp className="mr-2 h-4 w-4" />
                             Complete Quest
                           </Button>
-                        ) : null
+                        )
                       ) : (
                         <Button
-                          variant="cyber"
-                          className="w-full font-gaming"
+                          variant="default"
+                          className="w-full"
                           onClick={() => handleStartQuest(quest._id, quest.title)}
                         >
                           <Play className="mr-2 h-4 w-4" />
                           Start Quest
-                        </Button>
-                      )}
-
-                      {/* Quest Link Button */}
-                      {quest.link && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="w-full font-cyber mt-2"
-                          onClick={() => window.open(quest.link, '_blank', 'noopener,noreferrer')}
-                        >
-                          <ExternalLink className="mr-2 h-3 w-3" />
-                          Visit Quest Link
                         </Button>
                       )}
                     </div>
@@ -465,6 +471,7 @@ const Quests = () => {
                 );
               })}
             </AnimatePresence>
+            )}
           </motion.div>
 
           {filteredQuests && filteredQuests.length === 0 && (

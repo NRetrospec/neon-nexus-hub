@@ -1,6 +1,13 @@
 import { mutation, query } from "./_generated/server";
 import { Doc } from "./_generated/dataModel";
 import { v } from "convex/values";
+import {
+  checkRateLimit,
+  userRateLimitId,
+  validatePollTitle,
+  validateScore,
+  ValidationError,
+} from "./security";
 
 // ==================== HELPER FUNCTIONS ====================
 
@@ -53,6 +60,9 @@ function calculateAverageScores(votes: any[]) {
 
 /**
  * Create a new poll (PhreshTeam only)
+ * SECURITY: Rate limited to prevent poll spam
+ * SECURITY: Authorization check for PhreshTeam membership
+ * SECURITY: All inputs validated and sanitized
  */
 export const createPoll = mutation({
   args: {
@@ -71,63 +81,62 @@ export const createPoll = mutation({
     categoryWorld: v.number(),
   },
   handler: async (ctx, args) => {
+    // SECURITY: Rate limit poll creation
+    await checkRateLimit(ctx, userRateLimitId(args.userId), "createPoll", "create");
+
     // Verify user exists and is PhreshTeam
     const user = await ctx.db.get(args.userId);
     if (!user) {
       throw new Error("User not found");
     }
+    // SECURITY: Authorization check
     if (!user.phreshTeam) {
       throw new Error("Only PhreshTeam members can create polls");
     }
 
-    // Validate scores (0-10)
-    const scores = [
-      args.categoryGraphics,
-      args.categoryGameplay,
-      args.categoryFun,
-      args.categoryStory,
-      args.categorySound,
-      args.categoryPerformance,
-      args.categoryInnovation,
-      args.categoryContent,
-      args.categoryUI,
-      args.categoryWorld,
-    ];
-
-    if (scores.some((s) => s < 0 || s > 10 || !Number.isInteger(s))) {
-      throw new Error("All scores must be integers between 0 and 10");
+    // SECURITY: Validate and sanitize title (max 100 chars, XSS prevention)
+    const title = validatePollTitle(args.title);
+    if (title.length === 0) {
+      throw new ValidationError("title", "Poll title is required", "REQUIRED");
     }
+
+    // SECURITY: Validate all category scores using the security utility
+    const categoryGraphics = validateScore(args.categoryGraphics, "categoryGraphics");
+    const categoryGameplay = validateScore(args.categoryGameplay, "categoryGameplay");
+    const categoryFun = validateScore(args.categoryFun, "categoryFun");
+    const categoryStory = validateScore(args.categoryStory, "categoryStory");
+    const categorySound = validateScore(args.categorySound, "categorySound");
+    const categoryPerformance = validateScore(args.categoryPerformance, "categoryPerformance");
+    const categoryInnovation = validateScore(args.categoryInnovation, "categoryInnovation");
+    const categoryContent = validateScore(args.categoryContent, "categoryContent");
+    const categoryUI = validateScore(args.categoryUI, "categoryUI");
+    const categoryWorld = validateScore(args.categoryWorld, "categoryWorld");
 
     // Calculate total score
-    const totalScore = scores.reduce((a, b) => a + b, 0);
+    const totalScore = categoryGraphics + categoryGameplay + categoryFun + categoryStory +
+      categorySound + categoryPerformance + categoryInnovation + categoryContent +
+      categoryUI + categoryWorld;
 
+    // SECURITY: Validate total score
     if (totalScore > 100) {
-      throw new Error("Total score cannot exceed 100");
-    }
-
-    // Validate title
-    if (!args.title || args.title.trim().length === 0) {
-      throw new Error("Poll title is required");
-    }
-    if (args.title.length > 100) {
-      throw new Error("Poll title must be 100 characters or less");
+      throw new ValidationError("totalScore", "Total score cannot exceed 100", "MAX_VALUE");
     }
 
     // Create poll
     const pollId = await ctx.db.insert("polls", {
       creatorId: args.userId,
-      title: args.title.trim(),
+      title,
       image: args.imageStorageId,
-      categoryGraphics: args.categoryGraphics,
-      categoryGameplay: args.categoryGameplay,
-      categoryFun: args.categoryFun,
-      categoryStory: args.categoryStory,
-      categorySound: args.categorySound,
-      categoryPerformance: args.categoryPerformance,
-      categoryInnovation: args.categoryInnovation,
-      categoryContent: args.categoryContent,
-      categoryUI: args.categoryUI,
-      categoryWorld: args.categoryWorld,
+      categoryGraphics,
+      categoryGameplay,
+      categoryFun,
+      categoryStory,
+      categorySound,
+      categoryPerformance,
+      categoryInnovation,
+      categoryContent,
+      categoryUI,
+      categoryWorld,
       totalScore,
       voteCount: 1, // Creator's vote counts
       averageTotalScore: totalScore,
@@ -139,16 +148,16 @@ export const createPoll = mutation({
     await ctx.db.insert("pollVotes", {
       pollId,
       userId: args.userId,
-      categoryGraphics: args.categoryGraphics,
-      categoryGameplay: args.categoryGameplay,
-      categoryFun: args.categoryFun,
-      categoryStory: args.categoryStory,
-      categorySound: args.categorySound,
-      categoryPerformance: args.categoryPerformance,
-      categoryInnovation: args.categoryInnovation,
-      categoryContent: args.categoryContent,
-      categoryUI: args.categoryUI,
-      categoryWorld: args.categoryWorld,
+      categoryGraphics,
+      categoryGameplay,
+      categoryFun,
+      categoryStory,
+      categorySound,
+      categoryPerformance,
+      categoryInnovation,
+      categoryContent,
+      categoryUI,
+      categoryWorld,
       totalScore,
       createdAt: Date.now(),
     });
@@ -159,6 +168,9 @@ export const createPoll = mutation({
 
 /**
  * Submit a vote on a poll (all authenticated users, once per poll)
+ * SECURITY: Rate limited to prevent vote manipulation
+ * SECURITY: All scores validated
+ * SECURITY: Duplicate vote prevention
  */
 export const submitVote = mutation({
   args: {
@@ -176,6 +188,9 @@ export const submitVote = mutation({
     categoryWorld: v.number(),
   },
   handler: async (ctx, args) => {
+    // SECURITY: Rate limit voting
+    await checkRateLimit(ctx, userRateLimitId(args.userId), "submitVote", "default");
+
     // Verify poll exists
     const poll = await ctx.db.get(args.pollId);
     if (!poll) {
@@ -187,7 +202,7 @@ export const submitVote = mutation({
       throw new Error("This poll is closed and no longer accepting votes");
     }
 
-    // Check for existing vote
+    // SECURITY: Duplicate vote prevention
     const existingVote = await ctx.db
       .query("pollVotes")
       .withIndex("by_poll_and_user", (q) =>
@@ -199,45 +214,42 @@ export const submitVote = mutation({
       throw new Error("You have already voted on this poll");
     }
 
-    // Validate scores (0-10)
-    const scores = [
-      args.categoryGraphics,
-      args.categoryGameplay,
-      args.categoryFun,
-      args.categoryStory,
-      args.categorySound,
-      args.categoryPerformance,
-      args.categoryInnovation,
-      args.categoryContent,
-      args.categoryUI,
-      args.categoryWorld,
-    ];
-
-    if (scores.some((s) => s < 0 || s > 10 || !Number.isInteger(s))) {
-      throw new Error("All scores must be integers between 0 and 10");
-    }
+    // SECURITY: Validate all category scores using the security utility
+    const categoryGraphics = validateScore(args.categoryGraphics, "categoryGraphics");
+    const categoryGameplay = validateScore(args.categoryGameplay, "categoryGameplay");
+    const categoryFun = validateScore(args.categoryFun, "categoryFun");
+    const categoryStory = validateScore(args.categoryStory, "categoryStory");
+    const categorySound = validateScore(args.categorySound, "categorySound");
+    const categoryPerformance = validateScore(args.categoryPerformance, "categoryPerformance");
+    const categoryInnovation = validateScore(args.categoryInnovation, "categoryInnovation");
+    const categoryContent = validateScore(args.categoryContent, "categoryContent");
+    const categoryUI = validateScore(args.categoryUI, "categoryUI");
+    const categoryWorld = validateScore(args.categoryWorld, "categoryWorld");
 
     // Calculate total score
-    const totalScore = scores.reduce((a, b) => a + b, 0);
+    const totalScore = categoryGraphics + categoryGameplay + categoryFun + categoryStory +
+      categorySound + categoryPerformance + categoryInnovation + categoryContent +
+      categoryUI + categoryWorld;
 
+    // SECURITY: Validate total score
     if (totalScore > 100) {
-      throw new Error("Total score cannot exceed 100");
+      throw new ValidationError("totalScore", "Total score cannot exceed 100", "MAX_VALUE");
     }
 
     // Create new vote
     await ctx.db.insert("pollVotes", {
       pollId: args.pollId,
       userId: args.userId,
-      categoryGraphics: args.categoryGraphics,
-      categoryGameplay: args.categoryGameplay,
-      categoryFun: args.categoryFun,
-      categoryStory: args.categoryStory,
-      categorySound: args.categorySound,
-      categoryPerformance: args.categoryPerformance,
-      categoryInnovation: args.categoryInnovation,
-      categoryContent: args.categoryContent,
-      categoryUI: args.categoryUI,
-      categoryWorld: args.categoryWorld,
+      categoryGraphics,
+      categoryGameplay,
+      categoryFun,
+      categoryStory,
+      categorySound,
+      categoryPerformance,
+      categoryInnovation,
+      categoryContent,
+      categoryUI,
+      categoryWorld,
       totalScore,
       createdAt: Date.now(),
     });
@@ -266,6 +278,8 @@ export const submitVote = mutation({
 
 /**
  * Close a poll (creator only)
+ * SECURITY: Rate limited to prevent abuse
+ * SECURITY: Authorization check - only creator can close
  */
 export const closePoll = mutation({
   args: {
@@ -273,12 +287,15 @@ export const closePoll = mutation({
     pollId: v.id("polls"),
   },
   handler: async (ctx, args) => {
+    // SECURITY: Rate limit poll management
+    await checkRateLimit(ctx, userRateLimitId(args.userId), "closePoll", "default");
+
     const poll = await ctx.db.get(args.pollId);
     if (!poll) {
       throw new Error("Poll not found");
     }
 
-    // Verify ownership
+    // SECURITY: Authorization - only creator can close
     if (poll.creatorId !== args.userId) {
       throw new Error("Only the poll creator can close this poll");
     }
@@ -295,6 +312,8 @@ export const closePoll = mutation({
 
 /**
  * Reopen a closed poll (creator only)
+ * SECURITY: Rate limited to prevent abuse
+ * SECURITY: Authorization check - only creator can reopen
  */
 export const reopenPoll = mutation({
   args: {
@@ -302,12 +321,15 @@ export const reopenPoll = mutation({
     pollId: v.id("polls"),
   },
   handler: async (ctx, args) => {
+    // SECURITY: Rate limit poll management
+    await checkRateLimit(ctx, userRateLimitId(args.userId), "reopenPoll", "default");
+
     const poll = await ctx.db.get(args.pollId);
     if (!poll) {
       throw new Error("Poll not found");
     }
 
-    // Verify ownership
+    // SECURITY: Authorization - only creator can reopen
     if (poll.creatorId !== args.userId) {
       throw new Error("Only the poll creator can reopen this poll");
     }
@@ -324,6 +346,8 @@ export const reopenPoll = mutation({
 
 /**
  * Delete a poll (creator only)
+ * SECURITY: Rate limited to prevent mass deletion
+ * SECURITY: Authorization check - only creator can delete
  */
 export const deletePoll = mutation({
   args: {
@@ -331,12 +355,15 @@ export const deletePoll = mutation({
     pollId: v.id("polls"),
   },
   handler: async (ctx, args) => {
+    // SECURITY: Rate limit deletions
+    await checkRateLimit(ctx, userRateLimitId(args.userId), "deletePoll", "default");
+
     const poll = await ctx.db.get(args.pollId);
     if (!poll) {
       throw new Error("Poll not found");
     }
 
-    // Verify ownership
+    // SECURITY: Authorization - only creator can delete
     if (poll.creatorId !== args.userId) {
       throw new Error("Only the poll creator can delete this poll");
     }

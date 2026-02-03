@@ -4,18 +4,24 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
+import { XPProgress } from "@/components/ui/progress";
+import { Badge } from "@/components/ui/badge";
 import {
-  Gamepad2,
+  Skeleton,
+} from "@/components/ui/skeleton";
+import {
   Trophy,
   Target,
-  TrendingUp,
   Zap,
   Star,
-  Award,
   ArrowRight,
   Flame,
   Crown,
+  Play,
+  TrendingUp,
+  ChevronUp,
+  Clock,
+  Sparkles,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/landing/Navbar";
@@ -34,6 +40,18 @@ const Home = () => {
   const createUser = useMutation(api.users.createUser);
   const userStats = useQuery(
     api.users.getUserStats,
+    dbUser ? { userId: dbUser._id } : "skip"
+  );
+
+  // Get user's rank
+  const userRank = useQuery(
+    api.leaderboard.getUserRank,
+    dbUser ? { userId: dbUser._id } : "skip"
+  );
+
+  // Get user's quests (for in-progress detection)
+  const userQuests = useQuery(
+    api.quests.getUserQuests,
     dbUser ? { userId: dbUser._id } : "skip"
   );
 
@@ -77,16 +95,14 @@ const Home = () => {
   };
 
   // Helper to render avatar (emoji or image)
-  const renderAvatar = (avatar: string | undefined, size: "small" | "medium" = "medium") => {
+  const renderAvatar = (avatar: string | undefined, size: "small" | "medium" | "large" = "medium") => {
     if (!avatar) return "🎮";
-
-    // Check if avatar is a URL (from Clerk)
     const isUrl = avatar.startsWith("http://") || avatar.startsWith("https://");
-
     if (isUrl) {
       const sizeClasses = {
         small: "w-8 h-8",
-        medium: "w-10 h-10"
+        medium: "w-12 h-12",
+        large: "w-16 h-16"
       };
       return (
         <img
@@ -96,9 +112,8 @@ const Home = () => {
         />
       );
     }
-
-    // It's an emoji/text
-    return <span className="text-2xl">{avatar}</span>;
+    const textSizes = { small: "text-xl", medium: "text-3xl", large: "text-4xl" };
+    return <span className={textSizes[size]}>{avatar}</span>;
   };
 
   useEffect(() => {
@@ -116,325 +131,510 @@ const Home = () => {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-      },
+      transition: { staggerChildren: 0.05 },
     },
   };
 
   const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
+    hidden: { opacity: 0, y: 10 },
     visible: {
       opacity: 1,
       y: 0,
-      transition: {
-        duration: 0.5,
-        ease: "easeOut",
-      },
+      transition: { duration: 0.3, ease: "easeOut" },
     },
   };
 
-  const pulseVariants = {
-    initial: { scale: 1 },
-    animate: {
-      scale: [1, 1.05, 1],
-      transition: {
-        duration: 2,
-        repeat: Infinity,
-        ease: "easeInOut",
-      },
-    },
-  };
+  // Get in-progress quests
+  const inProgressQuests = userQuests?.filter(uq => uq.status === "in_progress") || [];
+  const continueQuest = inProgressQuests[0];
 
-  const stats = [
-    {
-      icon: Star,
-      label: "Level",
-      value: userStats?.level || 1,
-      color: "text-yellow-400",
-      bgColor: "from-yellow-500/20 to-orange-500/20",
-    },
-    {
-      icon: Zap,
-      label: "Total XP",
-      value: userStats?.xp.toLocaleString() || "0",
-      color: "text-primary",
-      bgColor: "from-primary/20 to-accent/20",
-    },
-    {
-      icon: Trophy,
-      label: "Points",
-      value: userStats?.points.toLocaleString() || "0",
-      color: "text-accent",
-      bgColor: "from-accent/20 to-purple-500/20",
-    },
-    {
-      icon: Target,
-      label: "Quests Done",
-      value: `${userStats?.completedQuestsCount || 0}/${userStats?.totalAvailableQuests || 0}`,
-      color: "text-neon-blue",
-      bgColor: "from-blue-500/20 to-cyan-500/20",
-    },
-  ];
+  // Get recommended quest (first available quest user hasn't started)
+  const startedQuestIds = userQuests?.map(uq => uq.questId) || [];
+  const recommendedQuest = activeQuests?.find(q => !startedQuestIds.includes(q._id));
 
-  const quickActions = [
-    {
-      icon: Gamepad2,
-      title: "Browse Quests",
-      description: "Complete challenges & earn rewards",
-      color: "neon-pink",
-      path: "/quests",
-    },
-    {
-      icon: Trophy,
-      title: "Leaderboard",
-      description: "Compete with top players",
-      color: "neon-orange",
-      path: "/leaderboard",
-    },
-  ];
+  // Calculate XP to next level
+  const currentXP = (userStats?.xp || 0) % 1000;
+  const xpToNextLevel = 1000 - currentXP;
+  const isNearLevelUp = currentXP >= 800;
 
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
 
-      <main className="pt-24 pb-16">
+      <main className="pt-20 pb-16">
         {/* Background Effects */}
-        <div className="fixed inset-0 animated-gradient opacity-30 pointer-events-none" />
-        <div className="fixed inset-0 cyber-grid opacity-10 pointer-events-none" />
+        <div className="fixed inset-0 animated-gradient opacity-20 pointer-events-none" />
+        <div className="fixed inset-0 cyber-grid opacity-5 pointer-events-none" />
 
-        <div className="container mx-auto px-4 relative z-10">
+        <div className="container mx-auto px-4 relative z-10 max-w-6xl">
           <motion.div
             variants={containerVariants}
             initial="hidden"
             animate="visible"
-            className="space-y-8"
+            className="space-y-6"
           >
-            {/* Welcome Header */}
-            <motion.div variants={itemVariants} className="text-center mb-12">
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ type: "spring", stiffness: 200, damping: 15 }}
-                className="inline-flex items-center gap-2 mb-4 px-3 sm:px-4 py-2 rounded-full bg-gradient-to-r from-primary/20 to-accent/20 border border-primary/30"
-              >
-                <Flame className="h-4 w-4 sm:h-5 sm:w-5 text-primary animate-pulse" />
-                <span className="text-xs sm:text-sm font-gaming text-primary">WELCOME BACK</span>
-              </motion.div>
-              <h1 className="text-3xl sm:text-4xl md:text-6xl font-gaming font-bold mb-4 px-4">
-                <span className="text-foreground">Hey, </span>
-                <span className="text-gradient">
-                  {user?.firstName || user?.username || "Player"}
-                </span>
-                <span className="text-foreground">!</span>
-              </h1>
-              <p className="text-muted-foreground font-cyber text-base sm:text-lg px-4">
-                Ready to dominate today's challenges?
-              </p>
-            </motion.div>
-
-            {/* Stats Grid */}
+            {/* ==================== PROGRESSION HUB ==================== */}
             <motion.div
               variants={itemVariants}
-              className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 md:gap-6"
+              className="gaming-card p-4 sm:p-6"
             >
-              {stats.map((stat, index) => (
-                <motion.div
-                  key={stat.label}
-                  variants={itemVariants}
-                  whileHover={{ scale: 1.05 }}
-                  className="gaming-card p-4 sm:p-6 text-center"
-                >
-                  <motion.div
-                    variants={pulseVariants}
-                    initial="initial"
-                    animate="animate"
-                    className={`w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-3 sm:mb-4 rounded-xl bg-gradient-to-br ${stat.bgColor} border border-border flex items-center justify-center`}
-                  >
-                    <stat.icon className={`h-6 w-6 sm:h-8 sm:w-8 ${stat.color}`} />
-                  </motion.div>
-                  <div className={`text-xl sm:text-2xl md:text-3xl font-gaming font-bold ${stat.color} mb-1`}>
-                    {stat.value}
+              {!userStats ? (
+                <div className="flex items-center gap-4">
+                  <Skeleton className="w-16 h-16 rounded-xl" />
+                  <div className="flex-1 space-y-2">
+                    <Skeleton className="w-32 h-6" />
+                    <Skeleton className="w-full h-4" />
+                    <Skeleton className="w-48 h-3" />
                   </div>
-                  <div className="text-xs sm:text-sm text-muted-foreground font-cyber">
-                    {stat.label}
-                  </div>
-                </motion.div>
-              ))}
-            </motion.div>
-
-            {/* XP Progress Bar */}
-            <motion.div variants={itemVariants} className="gaming-card p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <h3 className="text-lg font-gaming font-semibold text-foreground mb-1">
-                    Level Progress
-                  </h3>
-                  <p className="text-sm text-muted-foreground font-cyber">
-                    {((userStats?.xp || 0) % 1000)} / 1000 XP to Level{" "}
-                    {(userStats?.level || 1) + 1}
-                  </p>
                 </div>
-                <motion.div
-                  whileHover={{ rotate: 360 }}
-                  transition={{ duration: 0.5 }}
-                  className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-accent/20 border border-primary/30 flex items-center justify-center"
-                >
-                  <TrendingUp className="h-6 w-6 text-primary" />
-                </motion.div>
-              </div>
-              <Progress
-                value={((userStats?.xp || 0) % 1000) / 10}
-                className="h-4"
-              />
-            </motion.div>
-
-            {/* Quick Actions */}
-            <motion.div variants={itemVariants}>
-              <h2 className="text-2xl font-gaming font-bold text-foreground mb-6 flex items-center gap-3">
-                <Zap className="h-6 w-6 text-primary" />
-                Quick Actions
-              </h2>
-              <div className="grid md:grid-cols-2 gap-6">
-                {quickActions.map((action, index) => (
-                  <motion.div
-                    key={action.title}
-                    variants={itemVariants}
-                    whileHover={{ scale: 1.02, y: -5 }}
-                    onClick={() => navigate(action.path)}
-                    className="gaming-card p-6 cursor-pointer group"
-                  >
-                    <div className="flex items-start gap-4">
-                      <div className={`w-16 h-16 rounded-xl bg-gradient-to-br from-${action.color}/20 to-${action.color}/10 border border-${action.color}/30 flex items-center justify-center group-hover:scale-110 transition-transform`}>
-                        <action.icon className="h-8 w-8 text-primary" />
+              ) : (
+                <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                  {/* Avatar + Level */}
+                  <div className="flex items-center gap-4">
+                    <div className="relative">
+                      <div className="w-16 h-16 rounded-xl bg-card border-2 border-yellow-400/40 flex items-center justify-center overflow-hidden shadow-[0_0_20px_hsl(45_100%_50%/0.15)]">
+                        {renderAvatar(userStats.avatar, "large")}
                       </div>
-                      <div className="flex-1">
-                        <h3 className="text-xl font-gaming font-semibold text-foreground mb-2 group-hover:text-primary transition-colors">
-                          {action.title}
-                        </h3>
-                        <p className="text-sm text-muted-foreground font-cyber mb-4">
-                          {action.description}
-                        </p>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="font-cyber gap-2 group-hover:text-primary"
-                        >
-                          Explore
-                          <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
-                        </Button>
+                      {/* Level Badge */}
+                      <div className="absolute -bottom-1 -right-1 bg-yellow-400 text-yellow-950 text-xs font-gaming font-bold px-1.5 py-0.5 rounded-md shadow-lg">
+                        {userStats.level}
                       </div>
                     </div>
-                  </motion.div>
-                ))}
+
+                    {/* Name + Rank */}
+                    <div className="sm:hidden">
+                      <h1 className="text-xl font-gaming font-bold text-foreground">
+                        {user?.firstName || user?.username || "Player"}
+                      </h1>
+                      {userRank && (
+                        <div className="flex items-center gap-1 text-sm text-muted-foreground font-cyber">
+                          <span>Rank</span>
+                          <span className="text-primary font-bold">#{userRank.rank}</span>
+                          <ChevronUp className="h-3 w-3 text-neon-green" />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* XP Progress Section */}
+                  <div className="flex-1 space-y-2">
+                    {/* Top Row: Name + Rank (desktop) + Stats */}
+                    <div className="flex items-center justify-between gap-4">
+                      <div className="hidden sm:flex items-center gap-3">
+                        <h1 className="text-xl font-gaming font-bold text-foreground">
+                          {user?.firstName || user?.username || "Player"}
+                        </h1>
+                        {userRank && (
+                          <Badge variant="outline" className="font-cyber text-xs gap-1">
+                            <Crown className="h-3 w-3 text-yellow-400" />
+                            Rank #{userRank.rank}
+                            <ChevronUp className="h-3 w-3 text-neon-green" />
+                          </Badge>
+                        )}
+                      </div>
+
+                      {/* Momentum Stats */}
+                      <div className="flex items-center gap-3 text-xs font-cyber">
+                        <div className="flex items-center gap-1 text-muted-foreground">
+                          <Flame className="h-3.5 w-3.5 text-orange-400" />
+                          <span>5-day streak</span>
+                        </div>
+                        {isNearLevelUp && (
+                          <Badge variant="glow" className="text-[10px] gap-1 animate-pulse">
+                            <Sparkles className="h-3 w-3" />
+                            {xpToNextLevel} XP to level up!
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* XP Bar */}
+                    <XPProgress
+                      currentXP={currentXP}
+                      xpForNextLevel={1000}
+                      currentLevel={userStats.level}
+                      showLabels={true}
+                    />
+
+                    {/* Bottom Stats Row */}
+                    <div className="flex items-center gap-4 text-xs font-cyber text-muted-foreground">
+                      <span className="flex items-center gap-1">
+                        <Zap className="h-3 w-3 text-primary" />
+                        <span className="text-foreground font-medium">{userStats.xp.toLocaleString()}</span> total XP
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Trophy className="h-3 w-3 text-accent" />
+                        <span className="text-foreground font-medium">{userStats.points.toLocaleString()}</span> points
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Target className="h-3 w-3 text-neon-blue" />
+                        <span className="text-foreground font-medium">{userStats.completedQuestsCount}/{userStats.totalAvailableQuests}</span> quests
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </motion.div>
+
+            {/* ==================== SMART ACTIONS ==================== */}
+            <motion.div variants={itemVariants}>
+              <div className="grid sm:grid-cols-2 gap-4">
+                {/* Continue Quest */}
+                <div
+                  onClick={() => continueQuest ? navigate("/quests") : null}
+                  className={`gaming-card p-4 ${continueQuest ? 'cursor-pointer group' : 'opacity-60'}`}
+                >
+                  <div className="flex items-center gap-2 mb-3">
+                    <Play className="h-4 w-4 text-primary" />
+                    <span className="text-xs font-cyber uppercase tracking-wider text-muted-foreground">
+                      {continueQuest ? "Continue Quest" : "No Quest In Progress"}
+                    </span>
+                  </div>
+
+                  {continueQuest && continueQuest.quest ? (
+                    <div className="space-y-3">
+                      <div className="flex items-start gap-3">
+                        <div className="w-10 h-10 rounded-md bg-card border border-border/50 flex items-center justify-center overflow-hidden shrink-0">
+                          {continueQuest.quest.thumbnail?.startsWith('http') ? (
+                            <img
+                              src={getDirectImageUrl(continueQuest.quest.thumbnail)}
+                              alt={continueQuest.quest.title}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <span className="text-lg">{continueQuest.quest.thumbnail || '🎮'}</span>
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-gaming font-medium text-foreground truncate group-hover:text-primary transition-colors">
+                            {continueQuest.quest.title}
+                          </h3>
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground font-cyber">
+                            <span>+{continueQuest.quest.xp} XP</span>
+                            <span>•</span>
+                            <span>{continueQuest.quest.reward} pts</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Progress */}
+                      <div className="space-y-1">
+                        <div className="flex items-center justify-between text-xs font-cyber">
+                          <span className="text-muted-foreground">Progress</span>
+                          <span className="text-primary font-medium">{continueQuest.progress}%</span>
+                        </div>
+                        <div className="h-1.5 bg-muted/50 rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-gradient-to-r from-primary to-accent rounded-full transition-all"
+                            style={{ width: `${continueQuest.progress}%` }}
+                          />
+                        </div>
+                      </div>
+
+                      <Button variant="default" size="sm" className="w-full gap-2">
+                        Resume
+                        <ArrowRight className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="text-center py-4">
+                      <p className="text-sm text-muted-foreground font-cyber mb-3">
+                        Start a quest to track your progress
+                      </p>
+                      <Button variant="secondary" size="sm" onClick={() => navigate("/quests")}>
+                        Browse Quests
+                      </Button>
+                    </div>
+                  )}
+                </div>
+
+                {/* Recommended Quest */}
+                <div
+                  onClick={() => recommendedQuest ? navigate("/quests") : null}
+                  className={`gaming-card p-4 ${recommendedQuest ? 'cursor-pointer group' : 'opacity-60'}`}
+                >
+                  <div className="flex items-center gap-2 mb-3">
+                    <Star className="h-4 w-4 text-yellow-400" />
+                    <span className="text-xs font-cyber uppercase tracking-wider text-muted-foreground">
+                      Recommended
+                    </span>
+                    {recommendedQuest && (
+                      <Badge variant="success" className="text-[10px] ml-auto">New</Badge>
+                    )}
+                  </div>
+
+                  {recommendedQuest ? (
+                    <div className="space-y-3">
+                      <div className="flex items-start gap-3">
+                        <div className="w-10 h-10 rounded-md bg-card border border-border/50 flex items-center justify-center overflow-hidden shrink-0">
+                          {recommendedQuest.thumbnail?.startsWith('http') ? (
+                            <img
+                              src={getDirectImageUrl(recommendedQuest.thumbnail)}
+                              alt={recommendedQuest.title}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <span className="text-lg">{recommendedQuest.thumbnail || '🎮'}</span>
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-gaming font-medium text-foreground truncate group-hover:text-primary transition-colors">
+                            {recommendedQuest.title}
+                          </h3>
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground font-cyber">
+                            <span>+{recommendedQuest.xp} XP</span>
+                            <span>•</span>
+                            <span>{recommendedQuest.reward} pts</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Quest Info */}
+                      <div className="flex items-center gap-3 text-xs font-cyber">
+                        <Badge
+                          variant={
+                            recommendedQuest.difficulty === "Easy" ? "success" :
+                            recommendedQuest.difficulty === "Medium" ? "warning" : "destructive"
+                          }
+                          className="text-[10px]"
+                        >
+                          {recommendedQuest.difficulty}
+                        </Badge>
+                        <span className="flex items-center gap-1 text-muted-foreground">
+                          <Clock className="h-3 w-3" />
+                          {recommendedQuest.duration}
+                        </span>
+                      </div>
+
+                      <Button variant="default" size="sm" className="w-full gap-2">
+                        Start Quest
+                        <ArrowRight className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="text-center py-4">
+                      <p className="text-sm text-muted-foreground font-cyber">
+                        All quests completed!
+                      </p>
+                    </div>
+                  )}
+                </div>
               </div>
             </motion.div>
 
-            {/* Recent Activity & Top Players */}
-            <div className="grid md:grid-cols-2 gap-6">
-              {/* Active Quests Preview */}
-              <motion.div variants={itemVariants} className="gaming-card p-6">
-                <h3 className="text-xl font-gaming font-bold text-foreground mb-4 flex items-center gap-2">
-                  <Target className="h-5 w-5 text-primary" />
+            {/* ==================== STATS + LEADERBOARD ==================== */}
+            <motion.div variants={itemVariants}>
+              <div className="grid lg:grid-cols-5 gap-4">
+                {/* Your Stats - Compact */}
+                <div className="lg:col-span-2 gaming-card p-4">
+                  <h3 className="text-sm font-gaming font-semibold text-foreground mb-3 flex items-center gap-2">
+                    <TrendingUp className="h-4 w-4 text-primary" />
+                    Your Progress
+                  </h3>
+
+                  <div className="grid grid-cols-3 gap-3">
+                    {/* Completed Quests */}
+                    <div className="text-center p-3 rounded-lg bg-muted/30">
+                      <div className="text-2xl font-gaming font-bold text-neon-blue">
+                        {userStats?.completedQuestsCount || 0}
+                      </div>
+                      <div className="text-[10px] text-muted-foreground font-cyber uppercase">
+                        Completed
+                      </div>
+                    </div>
+
+                    {/* In Progress */}
+                    <div className="text-center p-3 rounded-lg bg-muted/30">
+                      <div className="text-2xl font-gaming font-bold text-accent">
+                        {inProgressQuests.length}
+                      </div>
+                      <div className="text-[10px] text-muted-foreground font-cyber uppercase">
+                        In Progress
+                      </div>
+                    </div>
+
+                    {/* Badges */}
+                    <div className="text-center p-3 rounded-lg bg-muted/30">
+                      <div className="text-2xl font-gaming font-bold text-yellow-400">
+                        {userStats?.badges?.length || 0}
+                      </div>
+                      <div className="text-[10px] text-muted-foreground font-cyber uppercase">
+                        Badges
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Leaderboard Snapshot */}
+                <div className="lg:col-span-3 gaming-card p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-sm font-gaming font-semibold text-foreground flex items-center gap-2">
+                      <Crown className="h-4 w-4 text-yellow-400" />
+                      Leaderboard
+                    </h3>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => navigate("/leaderboard")}
+                      className="text-xs font-cyber h-7 px-2"
+                    >
+                      View All
+                      <ArrowRight className="h-3 w-3 ml-1" />
+                    </Button>
+                  </div>
+
+                  <div className="space-y-1">
+                    {!topPlayers ? (
+                      <>
+                        <Skeleton className="h-9 w-full" />
+                        <Skeleton className="h-9 w-full" />
+                        <Skeleton className="h-9 w-full" />
+                      </>
+                    ) : (
+                      <>
+                        {/* Top 3 */}
+                        {topPlayers.slice(0, 3).map((player, index) => {
+                          const isCurrentUser = player.userId === dbUser?._id;
+                          return (
+                            <div
+                              key={player.userId}
+                              className={`flex items-center gap-3 p-2 rounded-md transition-colors ${
+                                isCurrentUser ? 'bg-primary/10 border border-primary/30' : 'hover:bg-muted/30'
+                              }`}
+                            >
+                              <div
+                                className={`w-6 h-6 rounded flex items-center justify-center text-xs font-gaming font-bold ${
+                                  index === 0 ? "bg-yellow-400/20 text-yellow-400" :
+                                  index === 1 ? "bg-gray-400/20 text-gray-400" :
+                                  "bg-amber-600/20 text-amber-600"
+                                }`}
+                              >
+                                {index + 1}
+                              </div>
+                              <div className="w-7 h-7 rounded overflow-hidden flex items-center justify-center bg-card border border-border/50">
+                                {renderAvatar(player.avatar, "small")}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <span className="text-sm font-gaming font-medium text-foreground truncate block">
+                                  {player.username}
+                                  {isCurrentUser && <span className="text-primary ml-1">(You)</span>}
+                                </span>
+                              </div>
+                              <div className="text-sm font-gaming font-bold text-primary">
+                                {player.xp.toLocaleString()}
+                              </div>
+                            </div>
+                          );
+                        })}
+
+                        {/* Separator if user not in top 3 */}
+                        {userRank && userRank.rank > 3 && (
+                          <>
+                            <div className="flex items-center gap-2 py-1">
+                              <div className="flex-1 h-px bg-border/50" />
+                              <span className="text-[10px] text-muted-foreground font-cyber">...</span>
+                              <div className="flex-1 h-px bg-border/50" />
+                            </div>
+
+                            {/* Current User Position */}
+                            <div className="flex items-center gap-3 p-2 rounded-md bg-primary/10 border border-primary/30">
+                              <div className="w-6 h-6 rounded flex items-center justify-center text-xs font-gaming font-bold text-muted-foreground bg-muted/50">
+                                {userRank.rank}
+                              </div>
+                              <div className="w-7 h-7 rounded overflow-hidden flex items-center justify-center bg-card border border-border/50">
+                                {renderAvatar(userStats?.avatar, "small")}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <span className="text-sm font-gaming font-medium text-foreground truncate block">
+                                  {user?.firstName || user?.username || "You"}
+                                  <span className="text-primary ml-1">(You)</span>
+                                </span>
+                              </div>
+                              <div className="text-sm font-gaming font-bold text-primary">
+                                {userStats?.xp.toLocaleString()}
+                              </div>
+                            </div>
+                          </>
+                        )}
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* ==================== AVAILABLE QUESTS ==================== */}
+            <motion.div variants={itemVariants} className="gaming-card p-4">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-sm font-gaming font-semibold text-foreground flex items-center gap-2">
+                  <Target className="h-4 w-4 text-primary" />
                   Available Quests
                 </h3>
-                <div className="space-y-3">
-                  {activeQuests?.slice(0, 3).map((quest, index) => (
-                    <motion.div
-                      key={quest._id}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: index * 0.1 }}
-                      className="flex items-center gap-3 p-3 rounded-lg bg-card/50 hover:bg-card transition-colors"
-                    >
-                      <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary/20 to-accent/20 border border-primary/30 flex items-center justify-center overflow-hidden shrink-0">
-                        {quest.thumbnail && quest.thumbnail.startsWith('http') ? (
-                          <img
-                            src={getDirectImageUrl(quest.thumbnail)}
-                            alt={quest.title}
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              e.currentTarget.style.display = 'none';
-                              const parent = e.currentTarget.parentElement;
-                              if (parent) {
-                                parent.innerHTML = '<div class="text-2xl">🎮</div>';
-                              }
-                            }}
-                          />
-                        ) : (
-                          <div className="text-2xl">{quest.thumbnail || '🎮'}</div>
-                        )}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="text-sm font-gaming font-semibold text-foreground truncate">
-                          {quest.title}
-                        </div>
-                        <div className="text-xs text-muted-foreground font-cyber">
-                          +{quest.xp} XP • {quest.reward} pts
-                        </div>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
                 <Button
-                  variant="cyber"
-                  className="w-full mt-4 font-gaming"
+                  variant="ghost"
+                  size="sm"
                   onClick={() => navigate("/quests")}
+                  className="text-xs font-cyber h-7 px-2"
                 >
-                  View All Quests
+                  View All
+                  <ArrowRight className="h-3 w-3 ml-1" />
                 </Button>
-              </motion.div>
+              </div>
 
-              {/* Top Players Preview */}
-              <motion.div variants={itemVariants} className="gaming-card p-6">
-                <h3 className="text-xl font-gaming font-bold text-foreground mb-4 flex items-center gap-2">
-                  <Crown className="h-5 w-5 text-yellow-400" />
-                  Top Players
-                </h3>
-                <div className="space-y-3">
-                  {topPlayers?.slice(0, 3).map((player, index) => (
-                    <motion.div
-                      key={player.userId}
-                      initial={{ opacity: 0, x: 20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: index * 0.1 }}
-                      className="flex items-center gap-3 p-3 rounded-lg bg-card/50"
-                    >
+              <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                {!activeQuests ? (
+                  <>
+                    <Skeleton className="h-20 w-full rounded-lg" />
+                    <Skeleton className="h-20 w-full rounded-lg" />
+                    <Skeleton className="h-20 w-full rounded-lg" />
+                    <Skeleton className="h-20 w-full rounded-lg" />
+                  </>
+                ) : (
+                  activeQuests.slice(0, 4).map((quest) => {
+                    const questStatus = userQuests?.find(uq => uq.questId === quest._id);
+                    const isCompleted = questStatus?.status === "completed";
+                    const isInProgress = questStatus?.status === "in_progress";
+
+                    if (isCompleted) return null;
+
+                    return (
                       <div
-                        className={`w-8 h-8 rounded-lg flex items-center justify-center font-gaming font-bold ${
-                          index === 0
-                            ? "bg-yellow-500/20 text-yellow-400"
-                            : index === 1
-                            ? "bg-gray-400/20 text-gray-400"
-                            : "bg-amber-600/20 text-amber-600"
-                        }`}
+                        key={quest._id}
+                        onClick={() => navigate("/quests")}
+                        className="p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors cursor-pointer group"
                       >
-                        {player.rank}
-                      </div>
-                      <div className="flex items-center justify-center overflow-hidden">
-                        {renderAvatar(player.avatar, "small")}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="text-sm font-gaming font-semibold text-foreground truncate">
-                          {player.username}
+                        <div className="flex items-start gap-2">
+                          <div className="w-8 h-8 rounded bg-card border border-border/50 flex items-center justify-center overflow-hidden shrink-0">
+                            {quest.thumbnail?.startsWith('http') ? (
+                              <img
+                                src={getDirectImageUrl(quest.thumbnail)}
+                                alt={quest.title}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <span className="text-sm">{quest.thumbnail || '🎮'}</span>
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h4 className="text-xs font-gaming font-medium text-foreground truncate group-hover:text-primary transition-colors">
+                              {quest.title}
+                            </h4>
+                            <div className="flex items-center gap-1.5 mt-0.5">
+                              <span className="text-[10px] text-primary font-cyber">+{quest.xp} XP</span>
+                              {isInProgress && (
+                                <Badge variant="warning" className="text-[8px] px-1 py-0">
+                                  In Progress
+                                </Badge>
+                              )}
+                            </div>
+                          </div>
                         </div>
-                        <div className="text-xs text-muted-foreground font-cyber">
-                          {player.xp.toLocaleString()} XP
-                        </div>
                       </div>
-                      {index === 0 && <Award className="h-5 w-5 text-yellow-400" />}
-                    </motion.div>
-                  ))}
-                </div>
-                <Button
-                  variant="glow"
-                  className="w-full mt-4 font-gaming"
-                  onClick={() => navigate("/leaderboard")}
-                >
-                  View Full Leaderboard
-                </Button>
-              </motion.div>
-            </div>
+                    );
+                  })
+                )}
+              </div>
+            </motion.div>
           </motion.div>
         </div>
       </main>

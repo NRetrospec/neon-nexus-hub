@@ -1,6 +1,22 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
+import {
+  checkRateLimit,
+  userRateLimitId,
+  validateBio,
+  validateStatus,
+  validateUrl,
+  validateArray,
+  sanitizeString,
+  ValidationError,
+} from "./security";
 
+// ==================== QUERIES ====================
+
+/**
+ * Get user profile
+ * SECURITY: No rate limiting needed for queries (read-only)
+ */
 export const getProfile = query({
   args: { userId: v.id("users") },
   handler: async (ctx, args) => {
@@ -9,6 +25,10 @@ export const getProfile = query({
   },
 });
 
+/**
+ * Get user's profile songs
+ * SECURITY: No rate limiting needed for queries (read-only)
+ */
 export const getProfileSongs = query({
   args: { userId: v.id("users") },
   handler: async (ctx, args) => {
@@ -26,6 +46,13 @@ export const getProfileSongs = query({
   },
 });
 
+// ==================== MUTATIONS ====================
+
+/**
+ * Update profile information
+ * SECURITY: Rate limited to prevent abuse
+ * SECURITY: All inputs validated and sanitized for XSS
+ */
 export const updateProfileInfo = mutation({
   args: {
     userId: v.id("users"),
@@ -38,54 +65,94 @@ export const updateProfileInfo = mutation({
     }))),
   },
   handler: async (ctx, args) => {
+    // SECURITY: Rate limit profile updates
+    await checkRateLimit(ctx, userRateLimitId(args.userId), "updateProfileInfo", "default");
+
     const user = await ctx.db.get(args.userId);
     if (!user) throw new Error("User not found");
 
-    // VALIDATION
-    if (args.bio && args.bio.length > 500) {
-      throw new Error("Bio must be 500 characters or less");
-    }
-    if (args.status && args.status.length > 100) {
-      throw new Error("Status must be 100 characters or less");
-    }
-    if (args.socialLinks && args.socialLinks.length > 5) {
-      throw new Error("Maximum 5 social links allowed");
+    const updateData: Record<string, unknown> = {};
+
+    // SECURITY: Validate and sanitize bio (max 500 chars, XSS prevention)
+    if (args.bio !== undefined) {
+      updateData.bio = args.bio ? validateBio(args.bio) : "";
     }
 
-    // URL validation for social links
-    if (args.socialLinks) {
-      for (const link of args.socialLinks) {
-        if (!link.url.startsWith('http://') && !link.url.startsWith('https://')) {
-          throw new Error("Social links must be valid URLs starting with http:// or https://");
+    // SECURITY: Validate and sanitize status (max 100 chars, XSS prevention)
+    if (args.status !== undefined) {
+      updateData.status = args.status ? validateStatus(args.status) : "";
+    }
+
+    // SECURITY: Validate social links
+    if (args.socialLinks !== undefined) {
+      // SECURITY: Limit array size
+      validateArray(args.socialLinks, {
+        minLength: 0,
+        maxLength: 5,
+        field: "socialLinks",
+      });
+
+      // SECURITY: Validate each link
+      const validatedLinks = args.socialLinks.map((link, index) => {
+        // Validate platform name
+        const platform = sanitizeString(link.platform, {
+          maxLength: 50,
+          trim: true,
+          field: `socialLinks[${index}].platform`,
+        });
+
+        // Validate URL
+        const url = validateUrl(link.url, {
+          allowedProtocols: ["http:", "https:"],
+          maxLength: 500,
+          field: `socialLinks[${index}].url`,
+        });
+
+        // Validate icon if provided
+        let icon = link.icon;
+        if (icon) {
+          icon = sanitizeString(icon, {
+            maxLength: 100,
+            trim: true,
+            field: `socialLinks[${index}].icon`,
+          });
         }
-      }
-    }
 
-    const updateData: any = {};
-    if (args.bio !== undefined) updateData.bio = args.bio;
-    if (args.status !== undefined) updateData.status = args.status;
-    if (args.socialLinks !== undefined) updateData.socialLinks = args.socialLinks;
+        return { platform, url, icon };
+      });
+
+      updateData.socialLinks = validatedLinks;
+    }
 
     await ctx.db.patch(args.userId, updateData);
     return { success: true };
   },
 });
 
+/**
+ * Upload a song to user profile
+ * SECURITY: Rate limited to prevent abuse
+ * SECURITY: File upload limits enforced
+ */
 export const uploadSong = mutation({
   args: {
     userId: v.id("users"),
     storageId: v.id("_storage"),
   },
   handler: async (ctx, args) => {
+    // SECURITY: Strict rate limiting for file uploads
+    await checkRateLimit(ctx, userRateLimitId(args.userId), "uploadSong", "upload");
+
     const user = await ctx.db.get(args.userId);
     if (!user) throw new Error("User not found");
 
     const currentSongs = user.songs || [];
+    // SECURITY: Enforce maximum song limit
     if (currentSongs.length >= 2) {
       throw new Error("Maximum 2 songs allowed. Please delete one first.");
     }
 
-    // Verify file exists
+    // Verify file exists (validates storage ID)
     const fileUrl = await ctx.storage.getUrl(args.storageId);
     if (!fileUrl) throw new Error("File not found");
 
@@ -97,18 +164,27 @@ export const uploadSong = mutation({
   },
 });
 
+/**
+ * Delete a song from user profile
+ * SECURITY: Rate limited to prevent abuse
+ * SECURITY: Authorization check - only owner can delete
+ */
 export const deleteSong = mutation({
   args: {
     userId: v.id("users"),
     storageId: v.id("_storage"),
   },
   handler: async (ctx, args) => {
+    // SECURITY: Rate limit deletions
+    await checkRateLimit(ctx, userRateLimitId(args.userId), "deleteSong", "default");
+
     const user = await ctx.db.get(args.userId);
     if (!user) throw new Error("User not found");
 
     const currentSongs = user.songs || [];
     const filteredSongs = currentSongs.filter(id => id !== args.storageId);
 
+    // SECURITY: Verify the song belongs to this user
     if (filteredSongs.length === currentSongs.length) {
       throw new Error("Song not found in user's collection");
     }

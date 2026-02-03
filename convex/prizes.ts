@@ -1,14 +1,21 @@
 import { v } from "convex/values";
 import { query, mutation } from "./_generated/server";
+import { checkRateLimit, userRateLimitId, sanitizeString } from "./security";
 
-// Get all available prizes
+// ==================== QUERIES ====================
+
+/**
+ * Get all available prizes
+ * SECURITY: No rate limiting needed for queries (read-only)
+ */
 export const getAllPrizes = query({
   handler: async (ctx) => {
+    // SECURITY: Limit results
     const prizes = await ctx.db
       .query("prizes")
       .filter((q) => q.eq(q.field("isAvailable"), true))
       .order("desc")
-      .collect();
+      .take(100);
     return prizes;
   },
 });
@@ -38,30 +45,39 @@ export const getFeaturedPrizes = query({
   },
 });
 
-// Redeem a prize
+// ==================== MUTATIONS ====================
+
+/**
+ * Redeem a prize
+ * SECURITY: Rate limited to prevent abuse
+ * SECURITY: Validates user has sufficient points and prize is in stock
+ */
 export const redeemPrize = mutation({
   args: {
     userId: v.id("users"),
     prizeId: v.id("prizes"),
   },
   handler: async (ctx, args) => {
+    // SECURITY: Rate limit redemptions to prevent abuse
+    await checkRateLimit(ctx, userRateLimitId(args.userId), "redeemPrize", "sensitive");
+
     const user = await ctx.db.get(args.userId);
     if (!user) throw new Error("User not found");
 
     const prize = await ctx.db.get(args.prizeId);
     if (!prize) throw new Error("Prize not found");
 
-    // Check if prize is available
+    // SECURITY: Check if prize is available
     if (!prize.isAvailable) {
       throw new Error("This prize is no longer available");
     }
 
-    // Check if prize is in stock
+    // SECURITY: Check if prize is in stock
     if (prize.stock <= 0) {
       throw new Error("This prize is out of stock");
     }
 
-    // Check if user has enough points
+    // SECURITY: Check if user has enough points
     if (user.points < prize.pointCost) {
       throw new Error("Insufficient points");
     }
@@ -94,15 +110,19 @@ export const redeemPrize = mutation({
   },
 });
 
-// Get user's redemptions
+/**
+ * Get user's redemptions
+ * SECURITY: No rate limiting needed for queries (read-only)
+ */
 export const getUserRedemptions = query({
   args: { userId: v.id("users") },
   handler: async (ctx, args) => {
+    // SECURITY: Limit results
     const redemptions = await ctx.db
       .query("redemptions")
       .withIndex("by_user", (q) => q.eq("userId", args.userId))
       .order("desc")
-      .collect();
+      .take(100);
 
     // Fetch prize details for each redemption
     const redemptionsWithPrizes = await Promise.all(
@@ -119,7 +139,12 @@ export const getUserRedemptions = query({
   },
 });
 
-// Update redemption status (admin function)
+/**
+ * Update redemption status (admin function)
+ * SECURITY: Rate limited - admin operation
+ * SECURITY: Delivery info is sanitized
+ * NOTE: In production, this should require admin authentication
+ */
 export const updateRedemptionStatus = mutation({
   args: {
     redemptionId: v.id("redemptions"),
@@ -133,12 +158,27 @@ export const updateRedemptionStatus = mutation({
     deliveryInfo: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    // SECURITY: Rate limit admin operations
+    await checkRateLimit(ctx, `redemption:${args.redemptionId}`, "updateRedemptionStatus", "admin");
+
     const redemption = await ctx.db.get(args.redemptionId);
     if (!redemption) throw new Error("Redemption not found");
 
+    // TODO: SECURITY: In production, add admin role verification here
+
+    // SECURITY: Sanitize delivery info if provided
+    let deliveryInfo = args.deliveryInfo;
+    if (deliveryInfo) {
+      deliveryInfo = sanitizeString(deliveryInfo, {
+        maxLength: 500,
+        trim: true,
+        field: "deliveryInfo",
+      });
+    }
+
     await ctx.db.patch(args.redemptionId, {
       status: args.status,
-      deliveryInfo: args.deliveryInfo,
+      deliveryInfo,
     });
 
     return { success: true };

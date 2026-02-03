@@ -35,10 +35,10 @@ const Navbar = () => {
         <div className="flex items-center justify-between h-16 md:h-20">
           {/* Logo */}
           <button onClick={() => navigate(isSignedIn ? "/home" : "/")} className="flex items-center gap-2 group">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-[0_0_20px_hsl(var(--primary)/0.5)] group-hover:shadow-[0_0_30px_hsl(var(--primary)/0.7)] transition-shadow">
-              <Gamepad2 className="h-5 w-5 text-primary-foreground" />
+            <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-[0_0_12px_hsl(var(--primary)/0.3)] group-hover:shadow-[0_0_16px_hsl(var(--primary)/0.4)] transition-shadow">
+              <Gamepad2 className="h-4 w-4 text-primary-foreground" />
             </div>
-            <span className="font-gaming font-bold text-xl text-foreground hidden sm:block">
+            <span className="font-gaming font-bold text-lg text-foreground hidden sm:block">
               PHRESH<span className="text-primary">TEAM</span>
             </span>
           </button>
@@ -98,7 +98,7 @@ const Navbar = () => {
               <UserButton
                 appearance={{
                   elements: {
-                    avatarBox: "w-9 h-9 rounded-xl border-2 border-primary/30 hover:border-primary/60 transition-colors shadow-[0_0_20px_hsl(var(--primary)/0.3)]"
+                    avatarBox: "w-8 h-8 rounded-lg border border-border/60 hover:border-primary/40 transition-colors"
                   }
                 }}
               />
