@@ -15,7 +15,8 @@
       "PowerShell(npx tsc --noEmit -p tsconfig.app.json 2>&1 | Out-String -Stream | Select-String -Pattern \"error TS\" | ForEach-Object { \\($_ -split '\\\\\\('\\)[0] } | Sort-Object -Unique)",
       "PowerShell(npm run *)",
       "PowerShell(npx eslint src/pages/Podcast.tsx convex/podcast.ts convex/podcastRelease.ts src/App.tsx src/components/landing/Navbar.tsx 2>&1 | Select-Object -First 30)",
-      "PowerShell(npx eslint src/pages/Social.tsx 2>&1 | Select-Object -Last 5)"
+      "PowerShell(npx eslint src/pages/Social.tsx 2>&1 | Select-Object -Last 5)",
+      "PowerShell(npm install *)"
     ],
     "deny": [],
     "ask": []
