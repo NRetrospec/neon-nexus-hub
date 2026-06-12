@@ -2,6 +2,16 @@ import { createContext, useContext, useState, useEffect, useCallback } from "rea
 
 export const THEMES = {
   default: {
+    name: 'Phresh Lime',
+    primary: '78 100% 56%',
+    accent: '270 100% 65%',
+    neonPink: '320 100% 65%',
+    neonPurple: '270 100% 65%',
+    neonBlue: '215 100% 62%',
+    neonGreen: '78 100% 56%',
+    neonOrange: '25 100% 55%',
+  },
+  pink: {
     name: 'Neon Pink',
     primary: '348 48% 58%',
     accent: '280 100% 65%',

@@ -2,10 +2,11 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { ClerkProvider, SignedIn, SignedOut } from "@clerk/clerk-react";
 import { ConvexProvider } from "convex/react";
 import { ConvexReactClient } from "convex/react";
+import { AnimatePresence, motion } from "framer-motion";
 
 import Index from "./pages/Index";
 import Features from "./pages/Features";
@@ -18,6 +19,7 @@ import Leaderboard from "./pages/Leaderboard";
 import Social from "./pages/Social";
 import Profile from "./pages/Profile";
 import Polls from "./pages/Polls";
+import Podcast from "./pages/Podcast";
 import NotFound from "./pages/NotFound";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 
@@ -40,17 +42,24 @@ if (!convexUrl) throw new Error("Missing Convex URL");
 
 const convex = new ConvexReactClient(convexUrl);
 
-const AppContent = () => {
+/**
+ * AnimatedRoutes — cinematic route transitions.
+ * Soft fade + depth (scale/blur) on every navigation, no hard cuts.
+ */
+const AnimatedRoutes = () => {
+  const location = useLocation();
   return (
-    <ConvexProvider client={convex}>
-      <ThemeProvider>
-        <QueryClientProvider client={queryClient}>
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <BrowserRouter>
-              <Routes>
-                {/* Landing/Marketing Routes - Only for logged-out users */}
+    <AnimatePresence mode="wait" initial={false}>
+      <motion.div
+        key={location.pathname}
+        initial={{ opacity: 0, scale: 0.985, filter: "blur(6px)" }}
+        animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
+        exit={{ opacity: 0, scale: 1.015, filter: "blur(6px)" }}
+        transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
+        style={{ minHeight: "100vh" }}
+      >
+        <Routes location={location}>
+          {/* Landing/Marketing Routes - Only for logged-out users */}
                 <Route
                   path="/"
                   element={
@@ -230,8 +239,36 @@ const AppContent = () => {
                   }
                 />
 
+                <Route
+                  path="/podcast"
+                  element={
+                    <ProtectedRoute>
+                      <UserSync>
+                        <LegalGuard>
+                          <Podcast />
+                        </LegalGuard>
+                      </UserSync>
+                    </ProtectedRoute>
+                  }
+                />
+
                 <Route path="*" element={<NotFound />} />
-              </Routes>
+        </Routes>
+      </motion.div>
+    </AnimatePresence>
+  );
+};
+
+const AppContent = () => {
+  return (
+    <ConvexProvider client={convex}>
+      <ThemeProvider>
+        <QueryClientProvider client={queryClient}>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <AnimatedRoutes />
             </BrowserRouter>
           </TooltipProvider>
         </QueryClientProvider>

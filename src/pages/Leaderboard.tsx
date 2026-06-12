@@ -141,7 +141,7 @@ const Leaderboard = () => {
       x: 0,
       transition: {
         duration: 0.25,
-        ease: "easeOut",
+        ease: "easeOut" as const,
       },
     },
   };

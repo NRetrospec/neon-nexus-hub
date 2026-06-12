@@ -6,99 +6,99 @@
 
 @layer base {
   :root {
-    /* Cyberpunk Gaming Color Palette */
-    --background: 240 10% 4%;
-    --foreground: 0 0% 95%;
+    /* PhreshTeamTV — Neon Lime / Electric Purple / Deep Indigo */
+    --background: 250 30% 4%;
+    --foreground: 0 0% 96%;
 
-    --card: 240 10% 8%;
-    --card-foreground: 0 0% 95%;
+    --card: 248 26% 8%;
+    --card-foreground: 0 0% 96%;
 
-    --popover: 240 10% 6%;
-    --popover-foreground: 0 0% 95%;
+    --popover: 248 28% 6%;
+    --popover-foreground: 0 0% 96%;
 
-    /* Rose Pink Primary */
-    --primary: 348 48% 58%;
-    --primary-foreground: 0 0% 100%;
+    /* Neon Lime Primary */
+    --primary: 78 100% 56%;
+    --primary-foreground: 250 30% 5%;
 
-    /* Peach Beige Secondary */
-    --secondary: 15 30% 82%;
-    --secondary-foreground: 240 10% 10%;
+    /* Deep Indigo Secondary */
+    --secondary: 252 30% 16%;
+    --secondary-foreground: 0 0% 96%;
 
-    --muted: 240 10% 15%;
-    --muted-foreground: 240 5% 65%;
+    --muted: 250 22% 14%;
+    --muted-foreground: 250 10% 66%;
 
-    /* Neon Accent */
-    --accent: 280 100% 65%;
+    /* Electric Purple Accent */
+    --accent: 270 100% 65%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 240 10% 20%;
-    --input: 240 10% 15%;
-    --ring: 348 48% 58%;
+    --border: 250 22% 18%;
+    --input: 250 22% 14%;
+    --ring: 78 100% 56%;
 
     --radius: 0.75rem;
 
     /* Custom Gaming Colors */
-    --neon-pink: 348 100% 65%;
-    --neon-purple: 280 100% 65%;
-    --neon-blue: 200 100% 60%;
-    --neon-green: 120 100% 50%;
+    --neon-pink: 320 100% 65%;
+    --neon-purple: 270 100% 65%;
+    --neon-blue: 215 100% 62%;
+    --neon-green: 78 100% 56%;
     --neon-orange: 25 100% 55%;
-    --cyber-dark: 240 15% 6%;
-    --cyber-darker: 240 15% 3%;
-    --grid-color: 348 48% 30%;
+    --cyber-dark: 250 30% 6%;
+    --cyber-darker: 252 35% 3%;
+    --grid-color: 270 60% 35%;
 
     /* Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(348 100% 65%) 0%, hsl(280 100% 65%) 100%);
-    --gradient-cyber: linear-gradient(180deg, hsl(240 15% 8%) 0%, hsl(240 15% 3%) 100%);
-    --gradient-glow: radial-gradient(ellipse at center, hsl(348 100% 65% / 0.15) 0%, transparent 70%);
+    --gradient-primary: linear-gradient(135deg, hsl(78 100% 56%) 0%, hsl(270 100% 65%) 100%);
+    --gradient-cyber: linear-gradient(180deg, hsl(250 30% 8%) 0%, hsl(252 35% 3%) 100%);
+    --gradient-glow: radial-gradient(ellipse at center, hsl(78 100% 56% / 0.12) 0%, transparent 70%);
 
     /* Shadows */
-    --shadow-neon: 0 0 20px hsl(348 100% 65% / 0.5), 0 0 40px hsl(348 100% 65% / 0.3);
-    --shadow-neon-lg: 0 0 30px hsl(348 100% 65% / 0.6), 0 0 60px hsl(348 100% 65% / 0.4), 0 0 100px hsl(348 100% 65% / 0.2);
-    --shadow-purple: 0 0 20px hsl(280 100% 65% / 0.5), 0 0 40px hsl(280 100% 65% / 0.3);
+    --shadow-neon: 0 0 20px hsl(78 100% 56% / 0.45), 0 0 40px hsl(78 100% 56% / 0.25);
+    --shadow-neon-lg: 0 0 30px hsl(78 100% 56% / 0.55), 0 0 60px hsl(78 100% 56% / 0.35), 0 0 100px hsl(78 100% 56% / 0.15);
+    --shadow-purple: 0 0 20px hsl(270 100% 65% / 0.5), 0 0 40px hsl(270 100% 65% / 0.3);
     --shadow-card: 0 4px 30px hsl(0 0% 0% / 0.5);
 
-    --sidebar-background: 240 10% 6%;
-    --sidebar-foreground: 0 0% 95%;
-    --sidebar-primary: 348 48% 58%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 10% 12%;
-    --sidebar-accent-foreground: 0 0% 95%;
-    --sidebar-border: 240 10% 15%;
-    --sidebar-ring: 348 48% 58%;
+    --sidebar-background: 250 28% 6%;
+    --sidebar-foreground: 0 0% 96%;
+    --sidebar-primary: 78 100% 56%;
+    --sidebar-primary-foreground: 250 30% 5%;
+    --sidebar-accent: 250 24% 12%;
+    --sidebar-accent-foreground: 0 0% 96%;
+    --sidebar-border: 250 22% 15%;
+    --sidebar-ring: 78 100% 56%;
   }
 
   .dark {
-    --background: 240 10% 4%;
-    --foreground: 0 0% 95%;
-    --card: 240 10% 8%;
-    --card-foreground: 0 0% 95%;
-    --popover: 240 10% 6%;
-    --popover-foreground: 0 0% 95%;
-    --primary: 348 48% 58%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 15 30% 82%;
-    --secondary-foreground: 240 10% 10%;
-    --muted: 240 10% 15%;
-    --muted-foreground: 240 5% 65%;
-    --accent: 280 100% 65%;
+    --background: 250 30% 4%;
+    --foreground: 0 0% 96%;
+    --card: 248 26% 8%;
+    --card-foreground: 0 0% 96%;
+    --popover: 248 28% 6%;
+    --popover-foreground: 0 0% 96%;
+    --primary: 78 100% 56%;
+    --primary-foreground: 250 30% 5%;
+    --secondary: 252 30% 16%;
+    --secondary-foreground: 0 0% 96%;
+    --muted: 250 22% 14%;
+    --muted-foreground: 250 10% 66%;
+    --accent: 270 100% 65%;
     --accent-foreground: 0 0% 100%;
     --destructive: 0 62% 30%;
     --destructive-foreground: 0 0% 100%;
-    --border: 240 10% 20%;
-    --input: 240 10% 15%;
-    --ring: 348 48% 58%;
-    --sidebar-background: 240 10% 6%;
-    --sidebar-foreground: 0 0% 95%;
-    --sidebar-primary: 348 48% 58%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 10% 12%;
-    --sidebar-accent-foreground: 0 0% 95%;
-    --sidebar-border: 240 10% 15%;
-    --sidebar-ring: 348 48% 58%;
+    --border: 250 22% 18%;
+    --input: 250 22% 14%;
+    --ring: 78 100% 56%;
+    --sidebar-background: 250 28% 6%;
+    --sidebar-foreground: 0 0% 96%;
+    --sidebar-primary: 78 100% 56%;
+    --sidebar-primary-foreground: 250 30% 5%;
+    --sidebar-accent: 250 24% 12%;
+    --sidebar-accent-foreground: 0 0% 96%;
+    --sidebar-border: 250 22% 15%;
+    --sidebar-ring: 78 100% 56%;
   }
 }
 
@@ -118,6 +118,40 @@
 }
 
 @layer components {
+  /* ==== pt-embed: pages rendered inside a HoloModal on the dashboard ==== */
+  /* Hide the page's own legacy navbar and footer — the modal provides chrome */
+  .pt-embed > div > nav,
+  .pt-embed nav.fixed,
+  .pt-embed footer {
+    display: none !important;
+  }
+
+  /* Collapse the top padding pages reserve for their fixed navbar */
+  .pt-embed main {
+    padding-top: 1.5rem !important;
+  }
+
+  /* Pages set min-h-screen + their own bg; let the modal's glass show through */
+  .pt-embed > div {
+    min-height: 100% !important;
+    background: transparent !important;
+  }
+
+  /* Slim neon scrollbar inside modals */
+  .pt-embed::-webkit-scrollbar {
+    width: 8px;
+  }
+  .pt-embed::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .pt-embed::-webkit-scrollbar-thumb {
+    background: hsl(var(--primary) / 0.25);
+    border-radius: 4px;
+  }
+  .pt-embed::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--primary) / 0.45);
+  }
+
   /* Cyber Grid Background */
   .cyber-grid {
     background-image: 

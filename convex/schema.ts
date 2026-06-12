@@ -308,7 +308,14 @@ export default defineSchema({
       v.literal("opt_out_recorded"),
       v.literal("version_updated"),
       v.literal("re_acceptance_required"),
-      v.literal("re_acceptance_completed")
+      v.literal("re_acceptance_completed"),
+      // Podcast release (CastForm) events
+      v.literal("podcast_release_viewed"),
+      v.literal("podcast_release_started"),
+      v.literal("podcast_release_submitted"),
+      v.literal("podcast_release_blocked"),
+      v.literal("podcast_release_email_sent"),
+      v.literal("podcast_release_email_failed")
     ),
     eventData: v.optional(v.string()), // JSON-encoded event details
     timestamp: v.number(),
@@ -383,4 +390,85 @@ export default defineSchema({
     .index("by_poll", ["pollId"])
     .index("by_user", ["userId"])
     .index("by_poll_and_user", ["pollId", "userId"]),
+
+  // ==================== PODCAST SYSTEM ====================
+
+  // Podcast episodes (videos)
+  podcastEpisodes: defineTable({
+    title: v.string(),
+    description: v.string(),
+    videoUrl: v.string(),
+    thumbnailUrl: v.optional(v.string()),
+    publishedAt: v.number(),
+    createdAt: v.number(),
+    isActive: v.boolean(),
+  })
+    .index("by_active_and_published", ["isActive", "publishedAt"])
+    .index("by_published", ["publishedAt"]),
+
+  // Per-episode discussion (chat-like comments)
+  podcastEpisodeComments: defineTable({
+    episodeId: v.id("podcastEpisodes"),
+    userId: v.id("users"),
+    content: v.string(),
+    createdAt: v.number(),
+  })
+    .index("by_episode", ["episodeId", "createdAt"])
+    .index("by_user", ["userId"]),
+
+  // Convex-controlled kill switch for the CastForm release flow.
+  // When isEnabled=false, the UI must render the button disabled AND
+  // podcast.submitCastForm must reject (server-side authoritative check).
+  castFormAvailability: defineTable({
+    isEnabled: v.boolean(),
+    // Informational only — the authoritative version/text pair lives in
+    // convex/podcastRelease.ts so version and hashed text can never drift.
+    releaseVersion: v.optional(v.string()),
+    requireTypedConfirmation: v.boolean(),
+    confirmationPhrase: v.optional(v.string()),
+    updatedAt: v.number(),
+    updatedBy: v.optional(v.string()),
+  }),
+
+  // Signed podcast likeness releases (IMMUTABLE legal evidence — consent
+  // fields are never patched; only email delivery bookkeeping is updated)
+  podcastReleaseSignatures: defineTable({
+    userId: v.id("users"),
+    clerkId: v.string(), // Redundant for audit purposes
+    episodeId: v.optional(v.id("podcastEpisodes")),
+    releaseVersion: v.string(), // e.g. "podcast_release_v1.0.0"
+    releaseTextChecksum: v.string(), // SHA-256 of the exact release text signed
+    acceptedAt: v.number(), // UTC timestamp (milliseconds)
+    ipAddress: v.string(),
+    userAgent: v.string(),
+    country: v.optional(v.string()),
+
+    // Structured record of exactly what the user affirmed
+    consentFields: v.object({
+      likenessConsent: v.boolean(),
+      recordingConsent: v.boolean(),
+      distributionConsent: v.boolean(),
+      typedConfirmation: v.optional(v.string()),
+    }),
+
+    // SHA-256 over canonicalized (release text hash + identity + timestamp + consents)
+    acceptanceChecksum: v.string(),
+
+    // Email delivery bookkeeping (operational, not legal evidence)
+    emailStatus: v.union(
+      v.literal("pending"),
+      v.literal("sent"),
+      v.literal("failed")
+    ),
+    resendMessageId: v.optional(v.string()),
+    emailError: v.optional(v.string()),
+    emailAttempts: v.number(),
+    lastEmailAttemptAt: v.optional(v.number()),
+
+    createdAt: v.number(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_clerk_id", ["clerkId"])
+    .index("by_user_and_version", ["userId", "releaseVersion"])
+    .index("by_email_status", ["emailStatus"]),
 });

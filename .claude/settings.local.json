@@ -8,7 +8,14 @@
       "Bash(cat:*)",
       "Bash(npx tsc:*)",
       "Bash(npm run dev:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(npm run remotion:studio:*)",
+      "PowerShell(npx convex codegen 2>&1 | Select-Object -First 20)",
+      "PowerShell(npx tsc --noEmit -p convex/tsconfig.json 2>&1 | Select-Object -First 30; \"convex exit: $LASTEXITCODE\"; npx tsc --noEmit -p tsconfig.app.json 2>&1 | Select-Object -First 30; \"app exit: $LASTEXITCODE\")",
+      "PowerShell(npx tsc --noEmit -p tsconfig.app.json 2>&1 | Out-String -Stream | Select-String -Pattern \"error TS\" | ForEach-Object { \\($_ -split '\\\\\\('\\)[0] } | Sort-Object -Unique)",
+      "PowerShell(npm run *)",
+      "PowerShell(npx eslint src/pages/Podcast.tsx convex/podcast.ts convex/podcastRelease.ts src/App.tsx src/components/landing/Navbar.tsx 2>&1 | Select-Object -First 30)",
+      "PowerShell(npx eslint src/pages/Social.tsx 2>&1 | Select-Object -Last 5)"
     ],
     "deny": [],
     "ask": []

@@ -16,6 +16,7 @@ const authenticatedNavLinks = [
   { label: "Quests", href: "/quests" },
   { label: "Leaderboard", href: "/leaderboard" },
   { label: "Social", href: "/social" },
+  { label: "Podcast", href: "/podcast" },
   { label: "Polls", href: "/polls" },
   { label: "Prizes", href: "/prizes" },
 ];
