@@ -15,17 +15,40 @@ import { motion, AnimatePresence } from "framer-motion";
  */
 
 const SESSION_KEY = "pt_intro_seen";
+const LOGIN_KEY = "pt_intro_login_sid";
 
-export const shouldShowIntro = () => {
+/**
+ * Show the intro when EITHER:
+ *  - this is a fresh visit to the site (new tab / browser reopened), OR
+ *  - the user signed in again (new Clerk session id since last intro).
+ * It does NOT replay on every visit to /home within the same login + visit.
+ */
+export const shouldShowIntro = (clerkSessionId?: string | null) => {
   try {
-    return sessionStorage.getItem(SESSION_KEY) !== "1";
+    const freshVisit = sessionStorage.getItem(SESSION_KEY) !== "1";
+    const freshLogin = clerkSessionId
+      ? localStorage.getItem(LOGIN_KEY) !== clerkSessionId
+      : false;
+    return freshVisit || freshLogin;
   } catch {
     return false;
   }
 };
 
+/** Persist that the intro has been seen for this visit + this login. */
+export const markIntroSeen = (clerkSessionId?: string | null) => {
+  try {
+    sessionStorage.setItem(SESSION_KEY, "1");
+    if (clerkSessionId) localStorage.setItem(LOGIN_KEY, clerkSessionId);
+  } catch {
+    /* private mode */
+  }
+};
+
 interface IntroSequenceProps {
   onComplete: () => void;
+  /** Current Clerk session id — ties intro replay to fresh logins. */
+  clerkSessionId?: string | null;
 }
 
 const PARTICLES = Array.from({ length: 26 }, (_, i) => ({
@@ -37,20 +60,16 @@ const PARTICLES = Array.from({ length: 26 }, (_, i) => ({
   lime: i % 3 !== 0,
 }));
 
-const IntroSequence = ({ onComplete }: IntroSequenceProps) => {
+const IntroSequence = ({ onComplete, clerkSessionId }: IntroSequenceProps) => {
   const [phase, setPhase] = useState(0);
   const [exiting, setExiting] = useState(false);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
 
   const finish = useCallback(() => {
-    try {
-      sessionStorage.setItem(SESSION_KEY, "1");
-    } catch {
-      /* private mode */
-    }
+    markIntroSeen(clerkSessionId);
     setExiting(true);
     setTimeout(onComplete, 700);
-  }, [onComplete]);
+  }, [onComplete, clerkSessionId]);
 
   useEffect(() => {
     const schedule = (fn: () => void, ms: number) => {

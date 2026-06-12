@@ -1,5 +1,5 @@
 import { useEffect, useState, lazy, Suspense } from "react";
-import { useUser } from "@clerk/clerk-react";
+import { useUser, useAuth } from "@clerk/clerk-react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { motion } from "framer-motion";
@@ -185,9 +185,20 @@ const PhreshClock = () => {
 
 const Home = () => {
   const { user } = useUser();
+  const { sessionId } = useAuth();
   const navigate = useNavigate();
+  // Intro plays on every fresh visit AND every fresh sign-in (new Clerk
+  // session) — but not on every return to /home within the same login.
   const [showIntro, setShowIntro] = useState(shouldShowIntro());
   const [activeSection, setActiveSection] = useState<SectionKey>("home");
+
+  // Clerk hydrates async — once the session id arrives, check whether this
+  // is a NEW login (different session id than the last intro we showed).
+  useEffect(() => {
+    if (sessionId && shouldShowIntro(sessionId)) {
+      setShowIntro(true);
+    }
+  }, [sessionId]);
 
   const openSection = (section: SectionKey) => {
     setActiveSection(section);
@@ -244,7 +255,12 @@ const Home = () => {
 
   return (
     <div className="min-h-screen relative">
-      {showIntro && <IntroSequence onComplete={() => setShowIntro(false)} />}
+      {showIntro && (
+        <IntroSequence
+          clerkSessionId={sessionId}
+          onComplete={() => setShowIntro(false)}
+        />
+      )}
 
       <AmbientBackground />
       <HoloSidebar onOpenSection={openSection} activeSection={activeSection} />
