@@ -13,13 +13,17 @@
  * text that was in force at signing time.
  */
 
-import { escapeHtml } from "./security";
+import { escapeHtml, ValidationError } from "./security";
 
 // ==================== VERSION + TEXT (authoritative pair) ====================
 
-export const PODCAST_RELEASE_VERSION = "podcast_release_v1.0.0";
+export const PODCAST_RELEASE_VERSION = "podcast_release_v1.0.1";
 
 export const DEFAULT_CONFIRMATION_PHRASE = "I AGREE";
+
+// Every signed release confirmation is also bcc'd here so the podcast team
+// has a copy of every signature as it's sent.
+export const PODCAST_RELEASE_BCC = "phreshteampodcast@gmail.com";
 
 export const PODCAST_RELEASE_TEXT = `PODCAST APPEARANCE, LIKENESS, AND MATERIALS RELEASE
 Version: ${PODCAST_RELEASE_VERSION}
@@ -66,7 +70,7 @@ trademark infringement.
 7. REVOCATION. This release is irrevocable with respect to content
 produced or distributed before any written revocation is received. Any
 revocation applies prospectively only and must be sent to
-legal@neonnexus.com.
+legal@phreshteam.tv.
 
 8. DATA HANDLING. The signature record created when you submit this form
 (including the timestamp, your account identifiers, your IP address, and
@@ -82,6 +86,36 @@ prior understandings on that subject.
 
 BY CHECKING THE REQUIRED BOXES AND SUBMITTING THIS FORM, YOU ACKNOWLEDGE
 THAT YOU HAVE READ AND UNDERSTOOD THIS RELEASE AND AGREE TO BE BOUND BY IT.`;
+
+// ==================== DRAWN SIGNATURE IMAGE VALIDATION ====================
+
+// A handwritten signature off a small canvas is at most a few tens of KB as
+// a PNG; cap well above that to allow for HiDPI canvases while still
+// rejecting abusive payloads.
+const SIGNATURE_IMAGE_MAX_LENGTH = 400_000; // ~300KB decoded
+const SIGNATURE_IMAGE_PATTERN = /^data:image\/png;base64,[A-Za-z0-9+/]+=*$/;
+
+/**
+ * Validates the base64 PNG data URL captured from the signature canvas.
+ * Only required when the signer chose the "drawn" method.
+ */
+export function validateSignatureImage(image: string): string {
+  if (image.length === 0 || image.length > SIGNATURE_IMAGE_MAX_LENGTH) {
+    throw new ValidationError(
+      "signatureImage",
+      "Signature image is missing or too large",
+      "INVALID"
+    );
+  }
+  if (!SIGNATURE_IMAGE_PATTERN.test(image)) {
+    throw new ValidationError(
+      "signatureImage",
+      "Signature image must be a PNG data URL",
+      "INVALID"
+    );
+  }
+  return image;
+}
 
 // ==================== DETERMINISTIC CANONICALIZATION ====================
 
@@ -198,10 +232,15 @@ export interface AcceptanceChecksumInput {
   userId: string;
   clerkId: string;
   acceptedAt: number;
+  signatureName: string; // full legal name — binds signer identity into the hash
   consentFields: {
     likenessConsent: boolean;
     recordingConsent: boolean;
     distributionConsent: boolean;
+    signatureName: string;
+    signatureMethod: "drawn" | "typed";
+    // Base64 PNG of the handwritten signature; present only when drawn.
+    signatureImage?: string;
     typedConfirmation?: string;
   };
 }
@@ -225,6 +264,9 @@ export interface ReleaseEmailParams {
   signatureReference: string;
   acceptanceChecksum: string;
   releaseText: string;
+  signatureName: string;
+  signatureMethod: "drawn" | "typed";
+  signatureImage?: string;
 }
 
 export function buildReleaseEmailSubject(releaseVersion: string): string {
@@ -239,6 +281,9 @@ export function buildReleaseEmailHtml(params: ReleaseEmailParams): string {
     signatureReference,
     acceptanceChecksum,
     releaseText,
+    signatureName,
+    signatureMethod,
+    signatureImage,
   } = params;
 
   return `<!DOCTYPE html>
@@ -253,6 +298,14 @@ export function buildReleaseEmailHtml(params: ReleaseEmailParams): string {
         A full copy of the release you agreed to is included below for your records.
       </p>
       <table style="width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 13px;">
+        <tr>
+          <td style="padding: 6px 0; color: #9a9ab0;">Signed by</td>
+          <td style="padding: 6px 0; font-weight: bold;">${escapeHtml(signatureName)}</td>
+        </tr>
+        <tr>
+          <td style="padding: 6px 0; color: #9a9ab0;">Signature method</td>
+          <td style="padding: 6px 0;">${signatureMethod === "drawn" ? "Handwritten (canvas)" : "Typed"}</td>
+        </tr>
         <tr>
           <td style="padding: 6px 0; color: #9a9ab0;">Release version</td>
           <td style="padding: 6px 0;">${escapeHtml(releaseVersion)}</td>
@@ -270,9 +323,22 @@ export function buildReleaseEmailHtml(params: ReleaseEmailParams): string {
           <td style="padding: 6px 0; font-family: monospace; word-break: break-all;">${escapeHtml(acceptanceChecksum)}</td>
         </tr>
       </table>
+
+      <!-- Visual signature block (analogous to a DocuSign signature line) -->
+      <div style="border: 1px solid #3a3a5e; border-radius: 8px; padding: 20px 24px; margin: 24px 0; background: #0f0f18;">
+        <p style="margin: 0 0 4px 0; font-size: 11px; color: #9a9ab0; text-transform: uppercase; letter-spacing: 0.08em;">Electronic Signature</p>
+        ${
+          signatureMethod === "drawn" && signatureImage
+            ? `<img src="${signatureImage}" alt="Signature of ${escapeHtml(signatureName)}" style="max-width: 320px; max-height: 100px; display: block;" />`
+            : `<p style="margin: 0; font-family: 'Brush Script MT', 'Segoe Script', 'Helvetica Neue', cursive; font-size: 36px; color: #c8c8ff; letter-spacing: 0.02em;">${escapeHtml(signatureName)}</p>`
+        }
+        <hr style="border: none; border-top: 1px solid #3a3a5e; margin: 12px 0 8px;" />
+        <p style="margin: 0; font-size: 11px; color: #9a9ab0;">${escapeHtml(signatureName)} &nbsp;·&nbsp; ${escapeHtml(acceptedAtIso)} UTC</p>
+      </div>
+
       <p style="font-size: 13px; color: #9a9ab0;">
         Keep this email for your records. If you did not submit this form,
-        contact <a href="mailto:legal@neonnexus.com" style="color: #7c5cff;">legal@neonnexus.com</a> immediately.
+        contact <a href="mailto:legal@phreshteam.tv" style="color: #7c5cff;">legal@phreshteam.tv</a> immediately.
       </p>
       <hr style="border: none; border-top: 1px solid #2a2a3d; margin: 24px 0;" />
       <h2 style="font-size: 14px; color: #e8e8f0;">Copy of the release you signed</h2>

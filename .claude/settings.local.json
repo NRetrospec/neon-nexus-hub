@@ -16,7 +16,8 @@
       "PowerShell(npm run *)",
       "PowerShell(npx eslint src/pages/Podcast.tsx convex/podcast.ts convex/podcastRelease.ts src/App.tsx src/components/landing/Navbar.tsx 2>&1 | Select-Object -First 30)",
       "PowerShell(npx eslint src/pages/Social.tsx 2>&1 | Select-Object -Last 5)",
-      "PowerShell(npm install *)"
+      "PowerShell(npm install *)",
+      "Bash(npx convex *)"
     ],
     "deny": [],
     "ask": []

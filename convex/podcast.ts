@@ -35,6 +35,8 @@ import {
   computeAcceptanceChecksum,
   buildReleaseEmailHtml,
   buildReleaseEmailSubject,
+  validateSignatureImage,
+  PODCAST_RELEASE_BCC,
 } from "./podcastRelease";
 
 // ==================== QUERIES ====================
@@ -255,6 +257,12 @@ export const submitCastForm = mutation({
       recordingConsent: v.boolean(),
       distributionConsent: v.boolean(),
     }),
+    // Full legal name typed by the signer (binding under ESIGN/UETA)
+    signatureName: v.string(),
+    // Whether the user drew or typed their signature in the UI
+    signatureMethod: v.union(v.literal("drawn"), v.literal("typed")),
+    // Base64 PNG data URL of the handwritten signature (required when drawn)
+    signatureImage: v.optional(v.string()),
     typedConfirmation: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
@@ -307,6 +315,26 @@ export const submitCastForm = mutation({
       );
     }
 
+    // Validate and sanitize the full legal name (the binding e-signature)
+    const signatureName = sanitizeString(args.signatureName, {
+      maxLength: 200,
+      field: "signatureName",
+    });
+    if (signatureName.trim().length < 2) {
+      throw new ValidationError(
+        "signatureName",
+        "Full legal name is required (minimum 2 characters)",
+        "REQUIRED"
+      );
+    }
+
+    // A drawn signature must include the actual canvas image — the whole
+    // point of "drawn" is that it isn't just typed text.
+    const signatureImage =
+      args.signatureMethod === "drawn"
+        ? validateSignatureImage(args.signatureImage ?? "")
+        : undefined;
+
     // Typed confirmation (configurable via castFormAvailability)
     let typedConfirmation: string | undefined;
     if (config.requireTypedConfirmation) {
@@ -354,6 +382,9 @@ export const submitCastForm = mutation({
       likenessConsent: args.consents.likenessConsent,
       recordingConsent: args.consents.recordingConsent,
       distributionConsent: args.consents.distributionConsent,
+      signatureName,
+      signatureMethod: args.signatureMethod,
+      signatureImage,
       typedConfirmation,
     };
 
@@ -365,6 +396,7 @@ export const submitCastForm = mutation({
       userId: args.userId,
       clerkId: args.clerkId,
       acceptedAt,
+      signatureName,
       consentFields,
     });
 
@@ -386,7 +418,7 @@ export const submitCastForm = mutation({
       createdAt: acceptedAt,
     });
 
-    // Audit the acceptance
+    // Audit the acceptance (PRIVACY: we log the method and ref, not the raw name)
     await ctx.db.insert("consentAuditLog", {
       userId: args.userId,
       clerkId: args.clerkId,
@@ -398,6 +430,7 @@ export const submitCastForm = mutation({
       eventData: JSON.stringify({
         signatureId,
         acceptanceChecksum,
+        signatureMethod: args.signatureMethod,
         episodeId: args.episodeId ?? null,
       }),
     });
@@ -558,6 +591,9 @@ export const getReleaseEmailContext = internalQuery({
       acceptedAt: signature.acceptedAt,
       acceptanceChecksum: signature.acceptanceChecksum,
       emailStatus: signature.emailStatus,
+      signatureName: signature.consentFields.signatureName,
+      signatureMethod: signature.consentFields.signatureMethod,
+      signatureImage: signature.consentFields.signatureImage,
     };
   },
 });
@@ -649,6 +685,7 @@ export const sendReleaseEmail = internalAction({
         body: JSON.stringify({
           from: fromEmail,
           to: [context.email],
+          bcc: [PODCAST_RELEASE_BCC],
           subject: buildReleaseEmailSubject(context.releaseVersion),
           html: buildReleaseEmailHtml({
             username: context.username,
@@ -657,6 +694,9 @@ export const sendReleaseEmail = internalAction({
             signatureReference: args.signatureId,
             acceptanceChecksum: context.acceptanceChecksum,
             releaseText: PODCAST_RELEASE_TEXT,
+            signatureName: context.signatureName,
+            signatureMethod: context.signatureMethod,
+            signatureImage: context.signatureImage,
           }),
         }),
       });

@@ -113,8 +113,8 @@ const TermsOfService = () => {
         {/* Contact Info */}
         <p className="text-center text-xs text-muted-foreground font-cyber mt-6">
           Questions about these terms? Contact{" "}
-          <a href="mailto:legal@neonnexus.com" className="text-primary hover:underline">
-            legal@neonnexus.com
+          <a href="mailto:legal@phreshteam.tv" className="text-primary hover:underline">
+            legal@phreshteam.tv
           </a>
         </p>
       </div>

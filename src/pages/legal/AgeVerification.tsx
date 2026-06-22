@@ -320,8 +320,8 @@ const AgeVerification = () => {
           Users under 13 cannot create accounts due to federal law (COPPA).
           <br />
           If you need assistance, please contact{" "}
-          <a href="mailto:support@neonnexus.com" className="text-primary hover:underline">
-            support@neonnexus.com
+          <a href="mailto:support@phreshteam.tv" className="text-primary hover:underline">
+            support@phreshteam.tv
           </a>
         </p>
       </motion.div>

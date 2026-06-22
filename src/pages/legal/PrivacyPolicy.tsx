@@ -113,8 +113,8 @@ const PrivacyPolicy = () => {
         {/* Contact Info */}
         <p className="text-center text-xs text-muted-foreground font-cyber mt-6">
           Privacy questions? Contact{" "}
-          <a href="mailto:privacy@neonnexus.com" className="text-primary hover:underline">
-            privacy@neonnexus.com
+          <a href="mailto:privacy@phreshteam.tv" className="text-primary hover:underline">
+            privacy@phreshteam.tv
           </a>
           <br />
           <span className="mt-2 block">

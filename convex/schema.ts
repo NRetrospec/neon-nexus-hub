@@ -448,6 +448,14 @@ export default defineSchema({
       likenessConsent: v.boolean(),
       recordingConsent: v.boolean(),
       distributionConsent: v.boolean(),
+      // Full legal name typed by the user — the legally binding e-signature
+      // under ESIGN/UETA.  Always required.
+      signatureName: v.string(),
+      // Whether the user drew their signature on canvas or typed it.
+      // The typed full name is authoritative; the method is metadata.
+      signatureMethod: v.union(v.literal("drawn"), v.literal("typed")),
+      // Base64 PNG data URL of the handwritten signature (drawn method only).
+      signatureImage: v.optional(v.string()),
       typedConfirmation: v.optional(v.string()),
     }),
 

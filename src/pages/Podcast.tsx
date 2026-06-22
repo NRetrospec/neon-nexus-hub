@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useUser } from "@clerk/clerk-react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
@@ -10,6 +10,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Dialog,
   DialogContent,
@@ -26,14 +27,229 @@ import {
   MailWarning,
   MessageCircle,
   Mic,
+  PenLine,
+  RotateCcw,
   Send,
   Shield,
+  Type,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/landing/Navbar";
 import Footer from "@/components/landing/Footer";
 import { toast } from "sonner";
 import { Id } from "../../convex/_generated/dataModel";
+
+// ==================== SIGNATURE PAD ====================
+
+interface SignatureState {
+  signatureName: string;
+  signatureMethod: "drawn" | "typed";
+  // Base64 PNG of the canvas ink — the actual digital signature when drawn
+  signatureImage?: string;
+  isComplete: boolean;
+}
+
+/**
+ * Signature capture component.
+ * - Draw tab: HTML5 canvas for handwritten signature
+ * - Type tab: styled cursive input
+ * In both modes the signer must also type their full legal name, which is
+ * the binding e-signature artifact stored in the legal record.
+ */
+const SignaturePad = ({
+  onChange,
+}: {
+  onChange: (state: SignatureState) => void;
+}) => {
+  const [tab, setTab] = useState<"draw" | "type">("draw");
+  const [fullName, setFullName] = useState("");
+  const [typedSig, setTypedSig] = useState("");
+  const [hasDrawn, setHasDrawn] = useState(false);
+  const [signatureImage, setSignatureImage] = useState<string | undefined>(undefined);
+
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const isDrawingRef = useRef(false);
+  const lastPosRef = useRef({ x: 0, y: 0 });
+
+  // Initialise / re-init canvas background whenever the draw tab is active
+  const initCanvas = useCallback(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    // Backing resolution 2x for crisp rendering on HiDPI screens
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+    ctx.scale(dpr, dpr);
+    ctx.fillStyle = "#0f0f18";
+    ctx.fillRect(0, 0, rect.width, rect.height);
+    ctx.fillStyle = "#2e2e45";
+    ctx.font = "14px monospace";
+    ctx.fillText("Sign here ↓", 16, rect.height / 2);
+  }, []);
+
+  useEffect(() => {
+    if (tab === "draw") {
+      // Defer one frame so the canvas is visible before we measure it.
+      // This wipes any prior ink, so the captured signature state must
+      // reset in lockstep — otherwise a stale image could outlive the
+      // blanked canvas the user is now looking at.
+      setHasDrawn(false);
+      setSignatureImage(undefined);
+      const id = requestAnimationFrame(initCanvas);
+      return () => cancelAnimationFrame(id);
+    }
+  }, [tab, initCanvas]);
+
+  const getRelativePos = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    const canvas = canvasRef.current!;
+    const rect = canvas.getBoundingClientRect();
+    return {
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top,
+    };
+  };
+
+  const onPointerDown = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    e.currentTarget.setPointerCapture(e.pointerId);
+    isDrawingRef.current = true;
+    lastPosRef.current = getRelativePos(e);
+  };
+
+  const onPointerMove = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    if (!isDrawingRef.current) return;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    const pos = getRelativePos(e);
+    ctx.beginPath();
+    ctx.moveTo(lastPosRef.current.x, lastPosRef.current.y);
+    ctx.lineTo(pos.x, pos.y);
+    ctx.strokeStyle = "#d4d4f0";
+    ctx.lineWidth = 2.5;
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    ctx.stroke();
+    lastPosRef.current = pos;
+    if (!hasDrawn) setHasDrawn(true);
+  };
+
+  const onPointerUp = () => {
+    if (!isDrawingRef.current) return;
+    isDrawingRef.current = false;
+    // Capture the actual ink as the binding digital signature artifact
+    const canvas = canvasRef.current;
+    if (canvas) setSignatureImage(canvas.toDataURL("image/png"));
+  };
+
+  const clearCanvas = () => {
+    setHasDrawn(false);
+    setSignatureImage(undefined);
+    initCanvas();
+  };
+
+  // Propagate state to parent whenever any input changes
+  useEffect(() => {
+    const name = fullName.trim();
+    const isComplete =
+      tab === "draw"
+        ? hasDrawn && !!signatureImage && name.length >= 2
+        : typedSig.trim().length >= 2 && name.length >= 2;
+
+    onChange({
+      signatureName: name,
+      signatureMethod: tab === "draw" ? "drawn" : "typed",
+      signatureImage: tab === "draw" ? signatureImage : undefined,
+      isComplete,
+    });
+  }, [tab, fullName, typedSig, hasDrawn, signatureImage, onChange]);
+
+  return (
+    <div className="space-y-4">
+      <Tabs value={tab} onValueChange={(v) => setTab(v as "draw" | "type")}>
+        <TabsList className="grid grid-cols-2 w-full">
+          <TabsTrigger value="draw" className="font-gaming gap-2 text-xs">
+            <PenLine className="h-3.5 w-3.5" />
+            Draw Signature
+          </TabsTrigger>
+          <TabsTrigger value="type" className="font-gaming gap-2 text-xs">
+            <Type className="h-3.5 w-3.5" />
+            Type Signature
+          </TabsTrigger>
+        </TabsList>
+
+        {/* Draw tab */}
+        <TabsContent value="draw" className="mt-3 space-y-2">
+          <div className="relative rounded-lg overflow-hidden border-2 border-primary/40 bg-[#0f0f18]">
+            <canvas
+              ref={canvasRef}
+              className="w-full h-[140px] cursor-crosshair touch-none"
+              onPointerDown={onPointerDown}
+              onPointerMove={onPointerMove}
+              onPointerUp={onPointerUp}
+              onPointerLeave={onPointerUp}
+            />
+            <button
+              type="button"
+              onClick={clearCanvas}
+              className="absolute top-2 right-2 text-muted-foreground hover:text-foreground transition-colors"
+              title="Clear"
+            >
+              <RotateCcw className="h-4 w-4" />
+            </button>
+          </div>
+          {!hasDrawn && (
+            <p className="text-xs text-muted-foreground font-cyber text-center">
+              Draw your signature above using your mouse or finger
+            </p>
+          )}
+        </TabsContent>
+
+        {/* Type tab */}
+        <TabsContent value="type" className="mt-3">
+          <div className="rounded-lg border-2 border-primary/40 bg-[#0f0f18] px-4 py-3 min-h-[80px] flex items-center">
+            <input
+              type="text"
+              value={typedSig}
+              onChange={(e) => setTypedSig(e.target.value)}
+              placeholder="Type your signature here..."
+              className="w-full bg-transparent text-[28px] text-[#c8c8ff] outline-none placeholder:text-[#2e2e45]"
+              style={{ fontFamily: "'Brush Script MT', 'Segoe Script', cursive" }}
+              maxLength={100}
+            />
+          </div>
+          <p className="text-xs text-muted-foreground font-cyber mt-1">
+            Your typed signature carries the same legal weight as a handwritten one
+          </p>
+        </TabsContent>
+      </Tabs>
+
+      {/* Full legal name — always required, always visible */}
+      <div className="space-y-1.5">
+        <label className="text-sm font-gaming text-foreground">
+          Full legal name <span className="text-destructive">*</span>
+        </label>
+        <Input
+          value={fullName}
+          onChange={(e) => setFullName(e.target.value)}
+          placeholder="Your full legal name as it appears on official documents"
+          className="font-cyber"
+          maxLength={200}
+        />
+        <p className="text-[11px] text-muted-foreground font-cyber">
+          This is the binding legal signature stored in our records under ESIGN &
+          UETA.
+        </p>
+      </div>
+    </div>
+  );
+};
+
+// ==================== MAIN PODCAST PAGE ====================
 
 const Podcast = () => {
   const { user } = useUser();
@@ -68,13 +284,11 @@ const Podcast = () => {
         avatar: user.imageUrl || "🎮",
       });
     }
-  }, [user, dbUser]);
+  }, [user, dbUser, createUser]);
 
   const castFormEnabled = availability?.isEnabled === true;
 
   const handleOpenCastForm = () => {
-    // Guard: a disabled CastForm can never open the modal, even if the
-    // disabled attribute were tampered with in the DOM
     if (!castFormEnabled || !dbUser) return;
     setCastFormOpen(true);
   };
@@ -82,29 +296,24 @@ const Podcast = () => {
   const handleRetryEmail = async () => {
     if (!dbUser || !mySignature) return;
     try {
-      await retryReleaseEmail({
-        userId: dbUser._id,
-        signatureId: mySignature._id,
-      });
+      await retryReleaseEmail({ userId: dbUser._id, signatureId: mySignature._id });
       toast.success("Confirmation email re-queued!");
-    } catch (error: any) {
-      toast.error(error.message || "Failed to resend email");
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : "Failed to resend email";
+      toast.error(msg);
     }
   };
 
   const formatDate = (timestamp: number) => {
-    const date = new Date(timestamp);
-    const now = new Date();
-    const diff = now.getTime() - date.getTime();
+    const diff = Date.now() - timestamp;
     const minutes = Math.floor(diff / 60000);
     const hours = Math.floor(diff / 3600000);
     const days = Math.floor(diff / 86400000);
-
     if (minutes < 1) return "Just now";
     if (minutes < 60) return `${minutes}m ago`;
     if (hours < 24) return `${hours}h ago`;
     if (days < 7) return `${days}d ago`;
-    return date.toLocaleDateString();
+    return new Date(timestamp).toLocaleDateString();
   };
 
   return (
@@ -156,7 +365,7 @@ const Podcast = () => {
                     Want to be on the podcast?
                   </h2>
                   <p className="text-xs sm:text-sm text-muted-foreground font-cyber">
-                    Sign the digital release form to authorize use of your likeness.
+                    Sign the digital release authorizing use of your likeness and materials.
                   </p>
                   <p className="text-[10px] sm:text-xs text-muted-foreground/70 font-cyber mt-1">
                     Release version: {availability?.releaseVersion ?? "..."}
@@ -167,7 +376,7 @@ const Podcast = () => {
               {mySignature ? (
                 <div className="flex items-center gap-2 text-neon-green font-cyber text-sm shrink-0">
                   <CheckCircle2 className="h-5 w-5" />
-                  You're signed
+                  You&apos;re signed
                 </div>
               ) : (
                 <Button
@@ -188,8 +397,7 @@ const Podcast = () => {
               <div className="flex items-center gap-2 mt-4 pt-4 border-t border-border text-muted-foreground">
                 <Lock className="h-4 w-4 shrink-0" />
                 <p className="font-cyber text-xs sm:text-sm">
-                  CastForm currently unavailable. Check back later — applications
-                  open periodically.
+                  CastForm currently unavailable. Applications open periodically — check back later.
                 </p>
               </div>
             )}
@@ -259,9 +467,7 @@ const Podcast = () => {
                       variant="ghost"
                       size="sm"
                       onClick={() =>
-                        setShowComments(
-                          showComments === episode._id ? null : episode._id
-                        )
+                        setShowComments(showComments === episode._id ? null : episode._id)
                       }
                       className="font-cyber gap-1 sm:gap-2 text-xs sm:text-sm"
                     >
@@ -292,7 +498,7 @@ const Podcast = () => {
         </div>
       </main>
 
-      {/* CastForm modal — only ever mounted while the form is enabled */}
+      {/* CastForm modal — only ever mounted while the form is server-enabled */}
       {dbUser && user && castFormEnabled && availability && (
         <CastFormModal
           open={castFormOpen}
@@ -327,8 +533,9 @@ const EpisodeComments = ({
       await addComment({ userId, episodeId, content: commentContent });
       setCommentContent("");
       toast.success("Comment added!");
-    } catch (error: any) {
-      toast.error(error.message || "Failed to add comment");
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : "Failed to add comment";
+      toast.error(msg);
     }
   };
 
@@ -418,39 +625,47 @@ const CastFormModal = ({
   clerkId: string;
   availability: CastFormAvailability;
 }) => {
-  const [scrolled, setScrolled] = useState(false);
+  const [releaseScrolled, setReleaseScrolled] = useState(false);
   const [likenessConsent, setLikenessConsent] = useState(false);
   const [recordingConsent, setRecordingConsent] = useState(false);
   const [distributionConsent, setDistributionConsent] = useState(false);
   const [typedConfirmation, setTypedConfirmation] = useState("");
+  const [sigState, setSigState] = useState<SignatureState>({
+    signatureName: "",
+    signatureMethod: "drawn",
+    isComplete: false,
+  });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const startedLogged = useRef(false);
 
   const submitCastForm = useMutation(api.podcast.submitCastForm);
   const logCastFormEvent = useMutation(api.podcast.logCastFormEvent);
 
-  // Audit: log "viewed" each time the release is opened
+  // Stable callback so SignaturePad's useEffect dep doesn't fire every render
+  const handleSigChange = useCallback((s: SignatureState) => setSigState(s), []);
+
+  // Audit: log "viewed" each time the modal opens
   useEffect(() => {
     if (open) {
       logCastFormEvent({
         userId,
         clerkId,
         eventType: "podcast_release_viewed",
-        ipAddress: "CLIENT_IP", // Get from server in production
+        ipAddress: "CLIENT_IP",
         userAgent: navigator.userAgent,
       }).catch(() => {});
     } else {
-      // Reset form state when closing
-      setScrolled(false);
+      // Reset form state on close
+      setReleaseScrolled(false);
       setLikenessConsent(false);
       setRecordingConsent(false);
       setDistributionConsent(false);
       setTypedConfirmation("");
       startedLogged.current = false;
     }
-  }, [open]);
+  }, [open, userId, clerkId, logCastFormEvent]);
 
-  // Audit: log "started" on first interaction with a consent checkbox
+  // Audit: log "started" on first consent checkbox interaction
   const logStarted = () => {
     if (startedLogged.current) return;
     startedLogged.current = true;
@@ -458,16 +673,16 @@ const CastFormModal = ({
       userId,
       clerkId,
       eventType: "podcast_release_started",
-      ipAddress: "CLIENT_IP", // Get from server in production
+      ipAddress: "CLIENT_IP",
       userAgent: navigator.userAgent,
     }).catch(() => {});
   };
 
-  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
-    const element = e.currentTarget;
-    const scrollHeight = element.scrollHeight - element.clientHeight;
-    if (scrollHeight <= 10 || (element.scrollTop / scrollHeight) * 100 > 70) {
-      setScrolled(true);
+  const handleReleaseScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const el = e.currentTarget;
+    const scrollHeight = el.scrollHeight - el.clientHeight;
+    if (scrollHeight <= 10 || (el.scrollTop / scrollHeight) * 100 > 70) {
+      setReleaseScrolled(true);
     }
   };
 
@@ -475,11 +690,13 @@ const CastFormModal = ({
     !availability.requireTypedConfirmation ||
     typedConfirmation.trim() === (availability.confirmationPhrase ?? "I AGREE");
 
+  const allConsents = likenessConsent && recordingConsent && distributionConsent;
+
   const canSubmit =
-    likenessConsent &&
-    recordingConsent &&
-    distributionConsent &&
+    releaseScrolled &&
+    allConsents &&
     confirmationOk &&
+    sigState.isComplete &&
     !isSubmitting;
 
   const handleSubmit = async () => {
@@ -490,13 +707,16 @@ const CastFormModal = ({
       const result = await submitCastForm({
         userId,
         clerkId,
-        ipAddress: "CLIENT_IP", // In production, get from server
+        ipAddress: "CLIENT_IP",
         userAgent: navigator.userAgent,
         consents: {
           likenessConsent,
           recordingConsent,
           distributionConsent,
         },
+        signatureName: sigState.signatureName,
+        signatureMethod: sigState.signatureMethod,
+        signatureImage: sigState.signatureMethod === "drawn" ? sigState.signatureImage : undefined,
         typedConfirmation: availability.requireTypedConfirmation
           ? typedConfirmation.trim()
           : undefined,
@@ -508,8 +728,9 @@ const CastFormModal = ({
           : "Release signed! A confirmation email with your copy is on its way."
       );
       onOpenChange(false);
-    } catch (error: any) {
-      toast.error(error.message || "Failed to submit release");
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : "Failed to submit release";
+      toast.error(msg);
     } finally {
       setIsSubmitting(false);
     }
@@ -517,102 +738,93 @@ const CastFormModal = ({
 
   return (
     <Dialog open={open} onOpenChange={(next) => !isSubmitting && onOpenChange(next)}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto gaming-card">
+      <DialogContent className="max-w-2xl max-h-[92vh] overflow-y-auto gaming-card">
         <DialogHeader>
           <DialogTitle className="font-gaming text-foreground">
             Podcast Release Form
           </DialogTitle>
           <DialogDescription className="font-cyber">
-            Version {availability.releaseVersion} — please read the full release
-            before signing.
+            Version {availability.releaseVersion} — read the full release before signing.
           </DialogDescription>
         </DialogHeader>
 
-        {/* Scrollable legal text */}
-        <ScrollArea
-          className="h-[300px] w-full rounded-md border border-border p-4 bg-muted/30"
-          onScrollCapture={handleScroll}
-        >
-          <pre className="whitespace-pre-wrap font-cyber text-xs sm:text-sm leading-relaxed text-foreground">
-            {availability.releaseText}
-          </pre>
-        </ScrollArea>
+        {/* Step 1: Scrollable legal release text */}
+        <div className="space-y-2">
+          <h3 className="font-gaming text-sm text-foreground">
+            Step 1 — Read the Release
+          </h3>
+          <ScrollArea
+            className="h-[220px] w-full rounded-md border border-border p-4 bg-muted/30"
+            onScrollCapture={handleReleaseScroll}
+          >
+            <pre className="whitespace-pre-wrap font-cyber text-xs leading-relaxed text-foreground">
+              {availability.releaseText}
+            </pre>
+          </ScrollArea>
 
-        {!scrolled && (
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground font-cyber">
-              <Eye className="h-4 w-4" />
-              <span>Please scroll to the bottom to continue</span>
+          {!releaseScrolled && (
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground font-cyber">
+                <Eye className="h-4 w-4" />
+                <span>Scroll to the bottom to continue</span>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setReleaseScrolled(true)}
+                className="font-cyber text-xs"
+              >
+                Mark as Read
+              </Button>
             </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setScrolled(true)}
-              className="font-cyber text-xs"
-            >
-              Mark as Read
-            </Button>
-          </div>
-        )}
+          )}
+        </div>
 
-        {/* Required consents */}
-        <div className="space-y-4 p-4 bg-muted/20 rounded-lg border border-border">
-          <div className="flex items-start space-x-3">
-            <Checkbox
-              id="likeness"
-              checked={likenessConsent}
-              onCheckedChange={(checked) => {
-                logStarted();
-                setLikenessConsent(checked as boolean);
-              }}
-              disabled={!scrolled}
-              className="mt-1"
-            />
-            <label htmlFor="likeness" className="text-sm font-cyber leading-relaxed cursor-pointer">
-              <strong className="text-foreground">
-                I authorize use of my name, voice, image, and likeness
-              </strong>{" "}
-              <span className="text-destructive">*</span>
-            </label>
-          </div>
+        {/* Step 2: Consent checkboxes */}
+        <div className="space-y-3 p-4 bg-muted/20 rounded-lg border border-border">
+          <h3 className="font-gaming text-sm text-foreground">Step 2 — Confirm Consents</h3>
 
-          <div className="flex items-start space-x-3">
-            <Checkbox
-              id="recording"
-              checked={recordingConsent}
-              onCheckedChange={(checked) => {
-                logStarted();
-                setRecordingConsent(checked as boolean);
-              }}
-              disabled={!scrolled}
-              className="mt-1"
-            />
-            <label htmlFor="recording" className="text-sm font-cyber leading-relaxed cursor-pointer">
-              <strong className="text-foreground">
-                I consent to being recorded, filmed, and photographed
-              </strong>{" "}
-              <span className="text-destructive">*</span>
-            </label>
-          </div>
-
-          <div className="flex items-start space-x-3">
-            <Checkbox
-              id="distribution"
-              checked={distributionConsent}
-              onCheckedChange={(checked) => {
-                logStarted();
-                setDistributionConsent(checked as boolean);
-              }}
-              disabled={!scrolled}
-              className="mt-1"
-            />
-            <label htmlFor="distribution" className="text-sm font-cyber leading-relaxed cursor-pointer">
-              <strong className="text-foreground">
-                I agree to the editing, distribution, and promotional use described above
-              </strong>{" "}
-              <span className="text-destructive">*</span>
-            </label>
-          </div>
+          {[
+            {
+              id: "likeness",
+              checked: likenessConsent,
+              set: setLikenessConsent,
+              label: "I authorize use of my name, voice, image, and likeness",
+            },
+            {
+              id: "recording",
+              checked: recordingConsent,
+              set: setRecordingConsent,
+              label: "I consent to being recorded, filmed, and photographed",
+            },
+            {
+              id: "distribution",
+              checked: distributionConsent,
+              set: setDistributionConsent,
+              label:
+                "I agree to the editing, distribution, and promotional use described above",
+            },
+          ].map(({ id, checked, set, label }) => (
+            <div key={id} className="flex items-start space-x-3">
+              <Checkbox
+                id={id}
+                checked={checked}
+                onCheckedChange={(v) => {
+                  logStarted();
+                  set(v as boolean);
+                }}
+                disabled={!releaseScrolled}
+                className="mt-1"
+              />
+              <label
+                htmlFor={id}
+                className="text-sm font-cyber leading-relaxed cursor-pointer"
+              >
+                <strong className="text-foreground">{label}</strong>{" "}
+                <span className="text-destructive">*</span>
+              </label>
+            </div>
+          ))}
 
           {availability.requireTypedConfirmation && (
             <div className="pt-3 border-t border-border space-y-2">
@@ -626,7 +838,7 @@ const CastFormModal = ({
               <Input
                 value={typedConfirmation}
                 onChange={(e) => setTypedConfirmation(e.target.value)}
-                disabled={!scrolled}
+                disabled={!releaseScrolled}
                 placeholder={availability.confirmationPhrase ?? "I AGREE"}
                 className="font-mono"
               />
@@ -634,16 +846,37 @@ const CastFormModal = ({
           )}
         </div>
 
+        {/* Step 3: Digital signature */}
+        <div className="space-y-2 p-4 bg-muted/20 rounded-lg border border-border">
+          <h3 className="font-gaming text-sm text-foreground">Step 3 — Sign</h3>
+          <SignaturePad onChange={handleSigChange} />
+        </div>
+
         <Alert>
           <Shield className="h-4 w-4" />
           <AlertDescription className="font-cyber text-xs leading-relaxed">
-            <strong>Legal Notice:</strong> Submitting this form electronically
-            signs the release above and creates a legally binding agreement.
-            You will receive a copy by email for your records.
+            <strong>Legal Notice:</strong> Submitting this form electronically signs the
+            release above and creates a legally binding agreement under ESIGN & UETA.
+            A copy will be emailed to you for your records.
           </AlertDescription>
         </Alert>
 
-        <div className="flex flex-col sm:flex-row gap-3">
+        {/* Completion checklist */}
+        {!canSubmit && (
+          <div className="text-xs font-cyber text-muted-foreground space-y-1 pl-1">
+            {!releaseScrolled && <p className="text-destructive/80">· Read the release (scroll or mark as read)</p>}
+            {!allConsents && <p className="text-destructive/80">· Check all three consent boxes</p>}
+            {!sigState.isComplete && (
+              <p className="text-destructive/80">
+                {sigState.signatureMethod === "drawn"
+                  ? "· Draw your signature and type your full legal name"
+                  : "· Type your signature and full legal name"}
+              </p>
+            )}
+          </div>
+        )}
+
+        <div className="flex flex-col sm:flex-row gap-3 pt-1">
           <Button
             variant="neon"
             size="lg"

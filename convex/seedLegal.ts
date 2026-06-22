@@ -88,7 +88,7 @@ export const seedLegalDocuments = mutation({
 <p><strong>BY CLICKING "I ACCEPT," YOU ACKNOWLEDGE THAT YOU HAVE READ AND AGREE TO THESE TERMS.</strong></p>
 
 <p>For the complete Terms of Service, visit: <a href="/legal/terms">Full Terms Document</a></p>
-<p>Contact: <a href="mailto:legal@neonnexus.com">legal@neonnexus.com</a></p>
+<p>Contact: <a href="mailto:legal@phreshteam.tv">legal@phreshteam.tv</a></p>
     `.trim();
 
     // Privacy Policy Content (HTML format)
@@ -188,8 +188,8 @@ export const seedLegalDocuments = mutation({
 <p>We may update this Policy at any time. Material changes will require your re-consent.</p>
 
 <h2>11. CONTACT US</h2>
-<p>Email: <a href="mailto:privacy@neonnexus.com">privacy@neonnexus.com</a><br>
-Data Requests: <a href="mailto:privacy@neonnexus.com">privacy@neonnexus.com</a></p>
+<p>Email: <a href="mailto:privacy@phreshteam.tv">privacy@phreshteam.tv</a><br>
+Data Requests: <a href="mailto:privacy@phreshteam.tv">privacy@phreshteam.tv</a></p>
 
 <hr>
 
