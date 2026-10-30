@@ -15,6 +15,7 @@ import {
   Sparkles,
   Loader2,
   Star,
+  ExternalLink,
 } from "lucide-react";
 import { toast } from "sonner";
 import Navbar from "@/components/landing/Navbar";
@@ -410,6 +411,15 @@ export const GamesView = ({
                           >
                             <Maximize2 className="h-3.5 w-3.5" />
                           </button>
+                          <a
+                            href={activeGame.embedPath}
+                            target="_blank"
+                            rel="noreferrer"
+                            title="Open the game in a new tab"
+                            className="p-2 rounded-lg text-muted-foreground hover:text-primary border border-white/[0.07] hover:border-primary/40 transition-all"
+                          >
+                            <ExternalLink className="h-3.5 w-3.5" />
+                          </a>
                         </div>
                       </div>
 
@@ -544,6 +554,13 @@ export const GamesView = ({
                                 src={game.thumbnail}
                                 alt=""
                                 loading="lazy"
+                                onError={(e) => {
+                                  // Thumbnails live in Convex as plain paths, so a
+                                  // typo/missing file is a silent 404. Drop the
+                                  // image instead of rendering a broken icon —
+                                  // the card's gradient still reads fine.
+                                  e.currentTarget.style.display = "none";
+                                }}
                                 className="absolute inset-0 w-full h-full object-cover opacity-45 group-hover:opacity-65 group-hover:scale-105 transition-all duration-700"
                               />
                             )}
