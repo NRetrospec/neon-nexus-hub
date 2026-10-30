@@ -16,6 +16,11 @@
  *
  * After syncing: reload the site, the game is served at
  *   /games/<slug>/index.html
+ *
+ * NOTE: this folder is WIPED and re-copied on every sync — never put art you
+ * author here. Promo/promo-thumbnail art belongs in `public/game-covers/<slug>.jpg`
+ * (committed, survives syncs) and is referenced by the game's `thumbnail` field
+ * in Convex (games:upsertGame).
  */
 import { cp, mkdir, readdir, rm, stat, writeFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
