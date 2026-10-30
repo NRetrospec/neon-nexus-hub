@@ -11,6 +11,7 @@
 import type * as chat from "../chat.js";
 import type * as files from "../files.js";
 import type * as friends from "../friends.js";
+import type * as games from "../games.js";
 import type * as leaderboard from "../leaderboard.js";
 import type * as legal from "../legal.js";
 import type * as podcast from "../podcast.js";
@@ -34,6 +35,7 @@ declare const fullApi: ApiFromModules<{
   chat: typeof chat;
   files: typeof files;
   friends: typeof friends;
+  games: typeof games;
   leaderboard: typeof leaderboard;
   legal: typeof legal;
   podcast: typeof podcast;

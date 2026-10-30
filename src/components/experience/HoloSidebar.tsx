@@ -49,7 +49,7 @@ const NAV_ITEMS: {
 }[] = [
   { label: "Home", icon: Home, href: "/home", section: "home" },
   { label: "Community", icon: Users, href: "/social", section: "community" },
-  { label: "Games", icon: Gamepad2, href: "/quests", section: "games" },
+  { label: "Games", icon: Gamepad2, href: "/games", section: "games" },
   { label: "Events", icon: CalendarDays, href: "/polls", section: "events" },
   { label: "Media", icon: Clapperboard, href: "/podcast", section: "media" },
   { label: "Rankings", icon: Trophy, href: "/leaderboard", section: "rankings" },

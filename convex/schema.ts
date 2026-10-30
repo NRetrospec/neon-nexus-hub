@@ -201,6 +201,45 @@ export default defineSchema({
     .index("by_prize", ["prizeId"])
     .index("by_status", ["status"]),
 
+  // ==================== GAME ARCADE ====================
+  // Games made by PhreshTeam, playable inside the hub. Each title is a
+  // self-contained build served from /games/<slug>/ (see scripts/sync-game.mjs)
+  // and reports run results back over postMessage (see the game's net/bridge.js).
+  games: defineTable({
+    slug: v.string(),                  // URL + public/games/<slug> folder
+    title: v.string(),
+    tagline: v.string(),
+    description: v.string(),
+    thumbnail: v.string(),             // path or emoji
+    embedPath: v.string(),             // "/games/<slug>/index.html"
+    scoreLabel: v.string(),            // "SCORE" / "ROUNDS" etc.
+    accent: v.optional(v.string()),    // hsl string for the card glow
+    isActive: v.boolean(),
+    comingSoon: v.optional(v.boolean()),
+    order: v.number(),
+    createdAt: v.number(),
+  })
+    .index("by_active_and_order", ["isActive", "order"])
+    .index("by_slug", ["slug"]),
+
+  // One row per completed run. Best-per-user is derived at read time, so we
+  // keep full history (round, kills, duration) for stats and future badges.
+  gameScores: defineTable({
+    gameId: v.id("games"),
+    userId: v.id("users"),
+    score: v.number(),
+    round: v.number(),
+    kills: v.number(),
+    durationSec: v.number(),
+    character: v.string(),
+    perks: v.array(v.string()),
+    createdAt: v.number(),
+  })
+    .index("by_game_and_score", ["gameId", "score"])
+    .index("by_game_and_user", ["gameId", "userId"])
+    .index("by_user", ["userId"])
+    .index("by_created_at", ["createdAt"]),
+
   // ==================== LEGAL CONSENT SYSTEM ====================
 
   // Legal Documents (Terms of Service, Privacy Policy)

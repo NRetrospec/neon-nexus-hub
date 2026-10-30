@@ -2,6 +2,7 @@ import { ReactNode, Suspense, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
 import { playUI } from "@/lib/sound";
+import ModalErrorBoundary from "@/components/experience/ModalErrorBoundary";
 
 /**
  * HoloModal — full-screen holographic panel that embeds existing pages
@@ -117,6 +118,7 @@ const HoloModal = ({ open, title, onClose, children }: HoloModalProps) => {
               className="pt-embed relative flex-1 overflow-y-auto overscroll-contain"
               style={{ transform: "translateZ(0)" }}
             >
+              <ModalErrorBoundary title={title} onClose={onClose}>
               <Suspense
                 fallback={
                   <div className="flex items-center justify-center h-full min-h-[40vh]">
@@ -131,6 +133,7 @@ const HoloModal = ({ open, title, onClose, children }: HoloModalProps) => {
               >
                 {children}
               </Suspense>
+              </ModalErrorBoundary>
             </div>
           </motion.div>
         </motion.div>

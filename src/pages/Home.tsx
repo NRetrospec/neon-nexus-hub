@@ -40,7 +40,8 @@ const PTScene = lazy(() => import("@/components/experience/PTScene"));
 // Lazy-load section pages — embedded in HoloModals so the user never
 // leaves the hub. Code-split: each loads on first open only.
 const SocialPage = lazy(() => import("@/pages/Social"));
-const QuestsPage = lazy(() => import("@/pages/Quests"));
+// The games modal embeds the arcade hub, which hosts the Quests tab itself.
+const GamesPage = lazy(() => import("@/pages/Games"));
 const PollsPage = lazy(() => import("@/pages/Polls"));
 const PodcastPage = lazy(() => import("@/pages/Podcast"));
 const LeaderboardPage = lazy(() => import("@/pages/Leaderboard"));
@@ -53,7 +54,7 @@ const SECTION_MODALS: Record<
   { title: string; Component: React.LazyExoticComponent<() => JSX.Element> }
 > = {
   community: { title: "Community", Component: SocialPage },
-  games: { title: "Games & Quests", Component: QuestsPage },
+  games: { title: "Games & Quests", Component: GamesPage },
   events: { title: "Events", Component: PollsPage },
   media: { title: "PhreshCast", Component: PodcastPage },
   rankings: { title: "Rankings", Component: LeaderboardPage },

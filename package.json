@@ -10,6 +10,7 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "remotion:studio": "remotion studio src/remotion/index.ts",
+    "game:sync": "node scripts/sync-game.mjs",
     "remotion:render": "remotion render src/remotion/index.ts PhreshTeamTrailer out/trailer.mp4",
     "remotion:render-vertical": "remotion render src/remotion/index.ts PhreshTeamTrailer-Vertical out/trailer-vertical.mp4"
   },

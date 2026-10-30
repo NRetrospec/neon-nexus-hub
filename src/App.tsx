@@ -15,6 +15,7 @@ import Rankings from "./pages/Rankings";
 import Prizes from "./pages/Prizes";
 import Home from "./pages/Home";
 import Quests from "./pages/Quests";
+import Games from "./pages/Games";
 import Leaderboard from "./pages/Leaderboard";
 import Social from "./pages/Social";
 import Profile from "./pages/Profile";
@@ -173,6 +174,18 @@ const AnimatedRoutes = () => {
                       <UserSync>
                         <LegalGuard>
                           <Home />
+                        </LegalGuard>
+                      </UserSync>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/games"
+                  element={
+                    <ProtectedRoute>
+                      <UserSync>
+                        <LegalGuard>
+                          <Games />
                         </LegalGuard>
                       </UserSync>
                     </ProtectedRoute>
