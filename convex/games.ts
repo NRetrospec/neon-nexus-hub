@@ -24,6 +24,28 @@ import {
  * blast radius of a forged run to one leaderboard row.
  */
 
+/**
+ * Path/URL fields must NOT go through sanitizeString(): its escapeHtml() turns
+ * "/" into "&#x2F;", which silently corrupts stored asset paths (the iframe then
+ * requests "/&" and shows a 404). Validate the shape instead of escaping it.
+ */
+function validateAssetPath(value: string, field: string): string {
+  const v = String(value ?? "").trim();
+  if (v.length === 0 || v.length > 300) {
+    throw new Error(`${field} must be 1-300 characters`);
+  }
+  if (/[<>"'`\s]/.test(v)) {
+    throw new Error(`${field} contains invalid characters`);
+  }
+  if (v.includes("..")) {
+    throw new Error(`${field} must not contain ".."`);
+  }
+  if (!(v.startsWith("/") || v.startsWith("http://") || v.startsWith("https://"))) {
+    throw new Error(`${field} must start with "/" or be a full URL`);
+  }
+  return v;
+}
+
 const MAX_SCORE = 50_000_000;
 const MAX_ROUND = 999;
 const MAX_KILLS = 200_000;
@@ -403,16 +425,8 @@ export const upsertGame = mutation({
         trim: true,
         field: "description",
       }),
-      thumbnail: sanitizeString(args.thumbnail, {
-        maxLength: 500,
-        trim: true,
-        field: "thumbnail",
-      }),
-      embedPath: sanitizeString(args.embedPath, {
-        maxLength: 200,
-        trim: true,
-        field: "embedPath",
-      }),
+      thumbnail: validateAssetPath(args.thumbnail, "thumbnail"),
+      embedPath: validateAssetPath(args.embedPath, "embedPath"),
       scoreLabel: sanitizeString(args.scoreLabel, {
         maxLength: 24,
         trim: true,
